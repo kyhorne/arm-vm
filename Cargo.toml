@@ -5,3 +5,5 @@ authors = ["kyhorne <me@kyhorne.com>"]
 edition = "2018"
 
 [dependencies]
+strum = "0.13.0"
+strum_macros = "0.13.0"

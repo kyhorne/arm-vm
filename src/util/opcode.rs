@@ -1,0 +1,49 @@
+#[derive(
+	Clone,
+	EnumString,
+	Eq,
+	Debug,
+	PartialEq
+)]
+pub enum Opcode {
+	#[strum(
+		serialize="ADD",
+		serialize="add"
+	)]
+	ADD,
+	#[strum(
+		serialize="AND",
+		serialize="and"
+	)]
+	AND,
+	#[strum(
+		serialize="EOR",
+		serialize="eor"
+	)]
+	EOR,
+	#[strum(
+		serialize="MUL",
+		serialize="mul"
+	)]
+	MUL,
+	#[strum(
+		serialize="ORR",
+		serialize="orr"
+	)]
+	ORR,
+	#[strum(
+		serialize="SUB",
+		serialize="sub"
+	)]
+	SUB,
+	#[strum(
+		serialize="MOV",
+		serialize="mov"
+	)]
+	MOV,
+	#[strum(
+		serialize="MVN",
+		serialize="mvn"
+	)]
+	MVN
+}
