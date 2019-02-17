@@ -1,9 +1,12 @@
+use num_derive::FromPrimitive;
+
 #[derive(
 	Clone,
 	EnumString,
 	Eq,
 	Debug,
-	PartialEq
+	PartialEq,
+	FromPrimitive
 )]
 pub enum Opcode {
 	#[strum(
