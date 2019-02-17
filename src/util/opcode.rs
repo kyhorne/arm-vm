@@ -10,7 +10,7 @@ pub enum Opcode {
 		serialize="ADD",
 		serialize="add"
 	)]
-	ADD,
+	ADD = 0x1,
 	#[strum(
 		serialize="AND",
 		serialize="and"
@@ -45,5 +45,15 @@ pub enum Opcode {
 		serialize="MVN",
 		serialize="mvn"
 	)]
-	MVN
+	MVN,
+	#[strum(
+		serialize="LDR",
+		serialize="ldr"
+	)]
+	LDR,
+	#[strum(
+		serialize="STR",
+		serialize="str"
+	)]
+	STR
 }

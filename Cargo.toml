@@ -7,3 +7,5 @@ edition = "2018"
 [dependencies]
 strum = "0.13.0"
 strum_macros = "0.13.0"
+log = "0.4.6"
+env_logger = "0.6.0"

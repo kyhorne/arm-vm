@@ -10,7 +10,7 @@ pub enum Register {
 		serialize="R0",
 		serialize="r0"
 	)]
-	R0,
+	R0 = 0x0,
 	#[strum(
 		serialize="R1",
 		serialize="r1"
