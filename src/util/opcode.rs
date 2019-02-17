@@ -47,13 +47,13 @@ pub enum Opcode {
 	)]
 	MVN,
 	#[strum(
-		serialize="LDR",
-		serialize="ldr"
-	)]
-	LDR,
-	#[strum(
 		serialize="STR",
 		serialize="str"
 	)]
-	STR
+	STR,
+	#[strum(
+		serialize="LDR",
+		serialize="ldr"
+	)]
+	LDR
 }
