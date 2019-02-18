@@ -3,8 +3,8 @@
 	PartialEq
 )]
 pub enum Form {
-	/// A form one instruction has the following encoding scheme:
-	/// OP, DR, RX, RY ; DR <- [RX] OP [RY]
+	/// A Form One instruction has the following encoding scheme:
+	/// OP DR, RX, RY ; DR <- [RX] OP [RY]
 	///
 	/// # Examples:
 	/// ```
@@ -12,8 +12,8 @@ pub enum Form {
 	/// XOR R4, R4, R4
 	/// ```
 	One,
-	/// A form one instruction has the following encoding scheme:
-	/// OP, DR, RX ; DR <- OP([RX])
+	/// A Form Two instruction has the following encoding scheme:
+	/// OP DR, RX ; DR <- OP([RX])
 	///
 	/// # Examples:
 	/// ```
@@ -21,8 +21,8 @@ pub enum Form {
 	/// NOT R10, R11
 	/// ```
 	Two,
-	/// A form four instruction has the following encoding scheme:
-	/// OP, DR, RX, #immed16 ; DR <- [RX] OP #immed16
+	/// A Form Four instruction has the following encoding scheme:
+	/// OP DR, RX, #immed16 ; DR <- [RX] OP #immed16
 	///
 	/// # Examples:
 	/// ```
@@ -30,8 +30,8 @@ pub enum Form {
 	///	AND R4, R4, #0x1
 	/// ```
 	Four,
-	/// A form five instruction has the following encoding scheme:
-	/// OP, DR, #immed20
+	/// A Form Five instruction has the following encoding scheme:
+	/// OP DR, #immed20 ; DR <- OP(#immed20)
 	///
 	/// # Examples:
 	/// ```
