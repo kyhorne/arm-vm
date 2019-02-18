@@ -1,16 +1,23 @@
+use core::mem::transmute;
+use strum::AsStaticRef;
+
+use num_derive::FromPrimitive;
+
 #[derive(
 	Clone,
 	EnumString,
 	Eq,
 	Debug,
-	PartialEq
+	PartialEq,
+	FromPrimitive,
+	AsStaticStr
 )]
 pub enum Register {
 	#[strum(
 		serialize="R0",
 		serialize="r0"
 	)]
-	R0,
+	R0 = 0x0,
 	#[strum(
 		serialize="R1",
 		serialize="r1"
@@ -75,15 +82,21 @@ pub enum Register {
 		serialize="SP",
 		serialize="sp"
 	)]
-	SP,  // Stack pointer.
+	SP, // Stack pointer.
 	#[strum(
 		serialize="LR",
 		serialize="lr"
 	)]
-	LR,  // Link register.
+	LR, // Link register.
 	#[strum(
 		serialize="PC",
 		serialize="pc"
 	)]
-	PC   // Program counter.
+	PC  // Program counter.
+}
+
+/// Get the register name from a given address.
+pub fn get_name(addr: usize) -> String {
+	let register: Register = unsafe{transmute(addr as u8)};
+	register.as_static().to_uppercase()
 }

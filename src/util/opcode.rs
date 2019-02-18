@@ -1,16 +1,19 @@
+use num_derive::FromPrimitive;
+
 #[derive(
 	Clone,
 	EnumString,
 	Eq,
 	Debug,
-	PartialEq
+	PartialEq,
+	FromPrimitive
 )]
 pub enum Opcode {
 	#[strum(
 		serialize="ADD",
 		serialize="add"
 	)]
-	ADD,
+	ADD = 0x1,
 	#[strum(
 		serialize="AND",
 		serialize="and"
@@ -45,5 +48,15 @@ pub enum Opcode {
 		serialize="MVN",
 		serialize="mvn"
 	)]
-	MVN
+	MVN,
+	#[strum(
+		serialize="STR",
+		serialize="str"
+	)]
+	STR,
+	#[strum(
+		serialize="LDR",
+		serialize="ldr"
+	)]
+	LDR
 }

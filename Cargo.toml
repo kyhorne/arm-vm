@@ -7,3 +7,6 @@ edition = "2018"
 [dependencies]
 strum = "0.13.0"
 strum_macros = "0.13.0"
+num-derive = "0.2.4"
+num-traits = "0.2.6"
+clap = "2.32.0"
