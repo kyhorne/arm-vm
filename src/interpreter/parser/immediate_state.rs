@@ -1,6 +1,6 @@
-use super::super::lexer::{Token, Seperator};
-use super::super::parser::{StateMachine, ImmediateState, CloseBrace};
-use super::super::form::Form;
+use super::super::lexer::{Seperator, Token};
+use super::super::parser::{CloseBrace, ImmediateState, StateMachine};
+use super::super::super::util::Form;
 
 impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
     fn from(machine: StateMachine<ImmediateState>) -> StateMachine<CloseBrace> {
@@ -17,9 +17,8 @@ impl StateMachine<ImmediateState> {
 		match self.tokens.pop() {
 			Some(Token::Seperator(seperator)) => {
 				match seperator {
-					Seperator::CloseBrace => {
-						return StateMachine::<CloseBrace>::from(self).handler();
-					}
+					Seperator::CloseBrace =>
+						return StateMachine::<CloseBrace>::from(self).handler(),
 					_ => ()
 				}
 			}
@@ -27,6 +26,7 @@ impl StateMachine<ImmediateState> {
 				if self.forms.contains(&Form::Four) || self.forms.contains(&Form::Five) {
 					return Ok(())
 				}
+				return Err(())
 			}
 			_ => ()
 		}

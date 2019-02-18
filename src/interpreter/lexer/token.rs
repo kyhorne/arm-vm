@@ -7,31 +7,62 @@ use super::super::super::util::{Opcode, Register};
 	Debug,
 	PartialEq
 )]
-pub enum Immediate {
+pub enum Literal {
 	#[strum(default="true")]
-	Value(String)
+	Immediate(String)
 }
-impl Immediate {
+impl Literal {
+	/// Check whether immediate has a valid prefix.
 	pub fn is_valid(&mut self) -> bool {
         match self {
-            Immediate::Value(value) => {
-				let is_valid = value.starts_with("#");
-				value.remove(0); // Remove prefix
+            Literal::Immediate(immed) => {
+				let is_valid = immed.starts_with("#");
+				immed.remove(0); // Remove prefix
 				is_valid
 			}
         }
     }
+	/// Get immediate value.
 	pub fn get_value(self) -> u32 {
 		match self {
-			Immediate::Value(value) => {
-				if value.contains("0x") {
-					let value = value.trim_start_matches("0x");
-					return u32::from_str_radix(&value, 16).unwrap()
+			Literal::Immediate(immed) => {
+				if immed.contains("0x") {
+					// Get the value encoded as in base 16.
+					let immed = immed.trim_start_matches("0x");
+					return u32::from_str_radix(&immed, 16).unwrap()
 				}
-				value.parse::<u32>().unwrap()
+				immed.parse::<u32>().unwrap()
 			}
 		}
 	}
+}
+
+#[cfg(test)]
+mod tests {
+
+	use super::*;
+
+    #[test]
+    fn test_is_valid() {
+		// Test valid immediate value.
+		let mut immed = Literal::Immediate("#123".to_string());
+		assert!(immed.is_valid());
+		// Test invalid immediate value.
+		immed = Literal::Immediate("456".to_string());
+		assert!(!immed.is_valid());
+	}
+
+	#[test]
+    fn test_get_value() {
+		// Test immediate value encoded in base 10.
+		let mut immed = Literal::Immediate("123".to_string());
+		assert_eq!(immed.get_value(), 123);
+		// Test immediate value encoded in base 16.
+		immed = Literal::Immediate("0x999".to_string());
+		assert_eq!(immed.get_value(), 0x999);
+	}
+
+
 }
 
 #[derive(
@@ -47,11 +78,7 @@ pub enum Seperator {
 	#[strum(serialize="[")]
 	OpenBrace,
 	#[strum(serialize="]")]
-	CloseBrace,
-	#[strum(serialize="{")]
-	OpenBracket,
-	#[strum(serialize="}")]
-	CloseBracket
+	CloseBrace
 }
 
 #[derive(
@@ -67,22 +94,14 @@ pub enum Comment {
 }
 
 #[derive(
-	EnumString,
-	Eq,
+	Clone,
 	Debug,
-	PartialEq,
-	Clone
+	PartialEq
 )]
-pub enum Label {
-	#[strum(default="true")]
-	Identifier(String)
-}
-
-#[derive(Debug, PartialEq, Clone)]
+/// Parsable tokens.
 pub enum Token {
 	Opcode(Opcode),
 	Register(Register),
-	Immediate(Immediate),
+	Literal(Literal),
 	Seperator(Seperator),
-	Label(Label)
 }

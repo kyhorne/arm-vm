@@ -1,28 +1,28 @@
 use super::super::lexer::{Token, Seperator};
-use super::super::form::Form;
+use super::super::super::util::Form;
 
 use super::super::parser::{
-	StateMachine,
 	CommaState,
-	RegisterState,
 	ImmediateState,
-	OpenBrace
+	OpenBrace,
+	RegisterState,
+	StateMachine
 };
 
-impl From<StateMachine<CommaState>> for StateMachine<RegisterState> {
-    fn from(machine: StateMachine<CommaState>) -> StateMachine<RegisterState> {
+impl From<StateMachine<CommaState>> for StateMachine<ImmediateState> {
+    fn from(machine: StateMachine<CommaState>) -> StateMachine<ImmediateState> {
         StateMachine {
-            state:  RegisterState,
+            state:  ImmediateState,
 			tokens: machine.tokens,
 			forms:  machine.forms
         }
     }
 }
 
-impl From<StateMachine<CommaState>> for StateMachine<ImmediateState> {
-    fn from(machine: StateMachine<CommaState>) -> StateMachine<ImmediateState> {
+impl From<StateMachine<CommaState>> for StateMachine<RegisterState> {
+    fn from(machine: StateMachine<CommaState>) -> StateMachine<RegisterState> {
         StateMachine {
-            state:  ImmediateState,
+            state:  RegisterState,
 			tokens: machine.tokens,
 			forms:  machine.forms
         }
@@ -45,10 +45,11 @@ impl StateMachine<CommaState> {
 			Some(Token::Register(_)) => {
 				return StateMachine::<RegisterState>::from(self).handler()
 			}
-			Some(Token::Immediate(value)) => {
-				let value = value.get_value();
-				if (self.forms.contains(&Form::Four) && 0xFFFF < value)
-					|| (self.forms.contains(&Form::Five) && 0xFFFFF < value) {
+			Some(Token::Literal(immed)) => {
+				let immed = immed.get_value();
+				if (self.forms.contains(&Form::Four) && 0xFFFF < immed)
+					|| (self.forms.contains(&Form::Five) && 0xFFFFF < immed) {
+						println!("dsada {:?}", 0xFFFFF < immed);
 						return Err(())
 				}
 				return StateMachine::<ImmediateState>::from(self).handler()

@@ -1,45 +1,13 @@
-use std::io::{stdin , stdout, Write};
 mod token;
 
-pub use token::{Token, Seperator, Immediate, Comment, Label};
-
+pub use token::{Token, Seperator, Literal, Comment};
 use super::super::util::{Opcode, Register};
 use std::str::FromStr;
 
-use super::parser;
-use super::assembler;
-
-
-
-pub fn repl() {
-	loop {
-	    print!("> ");
-		let _ = stdout().flush();
-		let mut buffer = String::new();
-		match stdin().read_line(&mut buffer) {
-			Ok(_) => {
-				let mut tokens = lexer(buffer);
-				match parser::run(&mut tokens) {
-					Ok(())  => {
-						println!("Valid expression!");
-						let payload = assembler::run(&mut tokens);
-						println!("Assembler payload: {:#010X}", payload);
-					},
-					Err(()) => {
-						println!("Invalid expression!");
-						continue
-					}
-				}
-			}
-			_ => ()
-		}
-	}
-}
-
 /// Convert the soruce code into meaningful lexemes.
-fn lexer(mut buffer: String) -> Vec<Token> {
-	buffer.pop(); // Remove trailing new line.
-	// Pad seperators with whitespace.
+pub fn lexer(mut buffer: String) -> Vec<Token> {
+	buffer.pop(); // Remove the trailing new line.
+	// Pad separators with whitespace
 	buffer = buffer.replace(",", " , ");
 	buffer = buffer.replace("[", " [ ");
 	buffer = buffer.replace("]", " ] ");
@@ -62,19 +30,72 @@ fn lexer(mut buffer: String) -> Vec<Token> {
 			tokens.push(Token::Seperator(seperator));
 			continue;
 		}
-		if let Ok(mut immediate) = Immediate::from_str(&token) {
-			if immediate.is_valid() {
-				tokens.push(Token::Immediate(immediate));
+		if let Ok(mut immed) = Literal::from_str(&token) {
+			// Ensure immediate value has valid prefix.
+			if immed.is_valid() {
+				tokens.push(Token::Literal(immed));
 				continue;
 			}
 		}
 		if let Ok(_) = Comment::from_str(&token) {
+			// Comments indicate the end of an expression.
 			break;
-		}
-		if let Ok(label) = Label::from_str(&token) {
-			tokens.push(Token::Label(label));
-			continue;
 		}
 	}
 	return tokens;
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_form1_instruction() {
+		let tokens = vec![
+			Token::Opcode(Opcode::ADD),
+			Token::Register(Register::R5),
+			Token::Seperator(Seperator::Comma),
+			Token::Register(Register::R1),
+			Token::Seperator(Seperator::Comma),
+			Token::Register(Register::R10)
+		];
+		assert_eq!(tokens, lexer("add r5, r1, r10\n".to_string()));
+	}
+
+	#[test]
+    fn test_form2_instruction() {
+		let tokens = vec![
+			Token::Opcode(Opcode::MOV),
+			Token::Register(Register::R3),
+			Token::Seperator(Seperator::Comma),
+			Token::Register(Register::R5),
+		];
+		assert_eq!(tokens, lexer("MOV R3, R5 ; this is a comment\n".to_string()));
+	}
+
+	#[test]
+    fn test_form4_instruction() {
+		let tokens = vec![
+			Token::Opcode(Opcode::ADD),
+			Token::Register(Register::R5),
+			Token::Seperator(Seperator::Comma),
+			Token::Register(Register::R1),
+			Token::Seperator(Seperator::Comma),
+			Token::Literal(Literal::Immediate("10".to_string()))
+		];
+		assert_eq!(tokens, lexer("ADD R5, R1, #10\n".to_string()));
+	}
+
+	#[test]
+    fn test_form5_instruction() {
+		let tokens = vec![
+			Token::Opcode(Opcode::MVN),
+			Token::Register(Register::R6),
+			Token::Seperator(Seperator::Comma),
+			Token::Literal(Literal::Immediate("0x55555".to_string()))
+		];
+		assert_eq!(tokens, lexer("mvn r6, #0x55555\n".to_string()));
+	}
+
 }

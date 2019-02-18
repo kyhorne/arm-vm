@@ -1,21 +1,21 @@
 use super::super::lexer::{Token, Seperator};
-use super::super::parser::{StateMachine, RegisterState, CommaState, CloseBrace};
-use super::super::form::Form;
+use super::super::parser::{CloseBrace, CommaState, RegisterState, StateMachine};
+use super::super::super::util::Form;
 
-impl From<StateMachine<RegisterState>> for StateMachine<CommaState> {
-    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CommaState> {
+impl From<StateMachine<RegisterState>> for StateMachine<CloseBrace> {
+    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CloseBrace> {
         StateMachine {
-            state:  CommaState,
+            state:  CloseBrace,
 			tokens: machine.tokens,
 			forms:  machine.forms
         }
     }
 }
 
-impl From<StateMachine<RegisterState>> for StateMachine<CloseBrace> {
-    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CloseBrace> {
+impl From<StateMachine<RegisterState>> for StateMachine<CommaState> {
+    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CommaState> {
         StateMachine {
-            state:  CloseBrace,
+            state:  CommaState,
 			tokens: machine.tokens,
 			forms:  machine.forms
         }

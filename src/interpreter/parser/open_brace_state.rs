@@ -1,5 +1,5 @@
 use super::super::lexer::Token;
-use super::super::parser::{StateMachine, OpenBrace, RegisterState};
+use super::super::parser::{OpenBrace, StateMachine, RegisterState};
 
 impl From<StateMachine<OpenBrace>> for StateMachine<RegisterState> {
     fn from(machine: StateMachine<OpenBrace>) -> StateMachine<RegisterState> {
