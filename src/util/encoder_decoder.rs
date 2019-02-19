@@ -1,4 +1,3 @@
-use crate::util::register::get_name;
 use crate::vm::Address;
 use crate::vm::Payload;
 use super::form::Form;
@@ -58,7 +57,6 @@ pub fn is_mode_bit_toggled(payload: Payload) -> bool {
 pub fn get_dr_addr(payload: Payload) -> Address {
 	let (dr_mask, dr_offset) = EncoderDecoder::DR.get_encoding();
 	let dr_addr = ((payload & dr_mask) >> dr_offset) as Address;
-	println!("{:19}{}", "Dr: ", get_name(dr_addr));
 	dr_addr
 }
 
@@ -111,7 +109,13 @@ pub fn get_form_and_opcode(payload: Payload) -> Result<(Opcode, Form), ()> {
 					return Ok((opcode, Form::Two))
 				};
 			}
-			_ => ()
+			Opcode::LDR | Opcode::STR => {
+				if is_mode_bit_toggled(payload) {
+					return Ok((opcode, Form::Four))
+				} else {
+					return Ok((opcode, Form::Two))
+				};
+			}
 		}
 	}
 	return Err(())

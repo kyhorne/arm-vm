@@ -77,7 +77,14 @@ impl Processor {
 		// Define operand 1 by retrieving the content pointed to by register x.
 		let rx_addr = get_rx_addr(payload);
 		let op1 = self.registers[rx_addr];
-		println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
+		match opcode {
+			Opcode::STR => (),
+			_ => {
+				println!("{:19}{}", "Dr: ", get_name(dr_addr));
+				println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
+			}
+		}
+
 		// Define operand 2 depending on the mode bit.
 		let op2 = if is_mode_bit_toggled(payload) {
 			get_immed16(payload)
@@ -95,6 +102,16 @@ impl Processor {
 			Opcode::MUL => self.execute(dr_addr, Box::new(move || op1 * op2)),
 			Opcode::ORR => self.execute(dr_addr, Box::new(move || op1 | op2)),
 			Opcode::SUB => self.execute(dr_addr, Box::new(move || op1 - op2)),
+			Opcode::LDR => {
+				self.registers[dr_addr] = self.main_memory[(self.registers[rx_addr] + op2) as usize];
+				println!("{:17}[{}] = MMem[[{} + {:#0X}]]", "Result:", get_name(dr_addr), get_name(rx_addr), op2);
+			}
+			Opcode::STR => {
+				println!("{:17}[{}] = {:#010X}", "Dr:", get_name(dr_addr), self.registers[dr_addr]);
+				self.main_memory[(self.registers[rx_addr] + op2) as usize] = self.registers[dr_addr];
+				println!("{:11}{:#010X} = MMem[[{} + {:#0X}]]", "Result:", self.main_memory[(self.registers[rx_addr] + op2) as usize], get_name(rx_addr), op2);
+
+			}
 			_ => ()
 		}
 	}
@@ -102,6 +119,7 @@ impl Processor {
 	pub fn form_five_handler(&mut self, payload: Payload, opcode: Opcode) {
 		// Parse the destination address.
 		let dr_addr = get_dr_addr(payload);
+		println!("{:19}{}", "Dr: ", get_name(dr_addr));
 		// Parse the immediate 20-bit value.
 		let op1 = get_immed20(payload);
 		// Capture state of the parsed instruction by encapsulating state inside of closure and then call the execute function.
@@ -117,11 +135,31 @@ impl Processor {
 		let dr_addr = get_dr_addr(payload);
 		// Define operand 1 by retrieving the content pointed to by register x.
 		let rx_addr = get_rx_addr(payload);
-		let op1 = self.registers[rx_addr];
-		println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
 		match opcode {
-			Opcode::MOV => self.execute(dr_addr, Box::new(move || op1)),
-			Opcode::MVN => self.execute(dr_addr, Box::new(move || !op1)),
+			Opcode::MOV => {
+				println!("{:19}{}", "Dr: ", get_name(dr_addr));
+				let op1 = self.registers[rx_addr];
+				println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
+				self.execute(dr_addr, Box::new(move || op1))
+			}
+			Opcode::MVN => {
+				println!("{:19}{}", "Dr: ", get_name(dr_addr));
+				let op1 = self.registers[rx_addr];
+				println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
+				self.execute(dr_addr, Box::new(move || !op1))
+			}
+			Opcode::LDR => {
+				println!("{:19}{}", "Dr: ", get_name(dr_addr));
+				println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), self.registers[rx_addr]);
+				self.registers[dr_addr] = self.main_memory[self.registers[rx_addr] as usize];
+				println!("{:17}[{}] = MMem[[{}]]", "Result:", get_name(dr_addr), get_name(rx_addr));
+			}
+			Opcode::STR => {
+				println!("{:17}[{}] = {:#010X}", "Dr:", get_name(dr_addr), self.registers[dr_addr]);
+				println!("{:17}[{}] = {:#010X}", "Rx:", get_name(rx_addr), self.registers[rx_addr]);
+				self.main_memory[self.registers[rx_addr] as usize] = self.registers[dr_addr];
+				println!("{:11}MMem[[{}]] = {:#010X}", "Result:", get_name(rx_addr), self.main_memory[self.registers[rx_addr] as usize]);
+			}
 			_ => ()
 		}
 	}

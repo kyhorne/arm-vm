@@ -24,7 +24,7 @@ pub fn repl() -> Option<u32> {
 					let payload = assembler::get_bytecode(&mut tokens);
 					return Some(payload);
 				},
-				Err(()) => println!("Invalid expression!")
+				Err(()) => println!("Invalid syntax!")
 			}
 		}
 		_ => ()

@@ -21,7 +21,7 @@ pub enum Form {
 	/// # Examples:
 	/// ```
 	/// MOV R5, R1
-	/// NOT R10, R11
+	/// MVN R10, R11
 	/// ```
 	Two,
 	/// A form four instruction has the following encoding scheme:
@@ -39,6 +39,7 @@ pub enum Form {
 	/// # Examples:
 	/// ```
 	///	MOV R5, #0xF1234
+	/// MVN R9, #0x0
 	/// ```
 	Five
 }
