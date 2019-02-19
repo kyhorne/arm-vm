@@ -19,18 +19,18 @@ fn main() {
 						.arg(Arg::with_name("repl")
 							.short("r")
 							.long("repl")
-							.help("Runs the virtual machine in read-eval-print-loop (REPL) mode")
+							.help("Run the virtual machine in read-eval-print-loop (REPL) mode")
 							.takes_value(false))
-						.arg(Arg::with_name("load")
-							.short("L")
-							.long("load")
-							.help("Load and run the program from assembly/pgrm1.asm")
+						.arg(Arg::with_name("read")
+							.short("R")
+							.long("read")
+							.help("Load assembly/pgrm1.asm into the main memory of the virtual machine and run")
 							.takes_value(false))
 						.get_matches();
  	if matches.is_present("repl") {
 		vm::Processor::new().repl();
 	}
-	if matches.is_present("load") {
+	if matches.is_present("read") {
 		let program = interpreter::read_file();
 		let mut vm = vm::Processor::new();
 		vm.load_program(&program);
