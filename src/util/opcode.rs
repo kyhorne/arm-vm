@@ -1,3 +1,4 @@
+use crate::util::form::Form;
 use num_derive::FromPrimitive;
 
 #[derive(
@@ -59,4 +60,16 @@ pub enum Opcode {
 		serialize="ldr"
 	)]
 	LDR
+}
+
+impl Opcode {
+	/// Get the forms associated with a given opcode.
+	pub fn get_forms(&self) -> Vec<Form> {
+		match *self {
+			Opcode::ADD | Opcode::AND | Opcode::EOR | Opcode::MUL | Opcode::ORR | Opcode::SUB
+				=> vec![Form::One, Form::Four],
+			Opcode::MOV | Opcode::MVN => vec![Form::Two, Form::Five],
+			Opcode::STR | Opcode::LDR => vec![Form::One, Form::Two, Form::Four]
+		}
+	}
 }
