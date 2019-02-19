@@ -6,8 +6,8 @@ use crate::util::opcode::Opcode;
 	PartialEq
 )]
 pub enum Form {
-	/// A Form One instruction has the following encoding scheme:
-	/// OP DR, RX, RY ; DR <- [RX] OP [RY]
+	/// A form one instruction has the following encoding scheme:
+	/// OP, DR, RX, RY ; DR <- [RX] OP [RY]
 	///
 	/// # Examples:
 	/// ```
@@ -15,8 +15,8 @@ pub enum Form {
 	/// XOR R4, R4, R4
 	/// ```
 	One,
-	/// A Form Two instruction has the following encoding scheme:
-	/// OP DR, RX ; DR <- OP([RX])
+	/// A form one instruction has the following encoding scheme:
+	/// OP, DR, RX ; DR <- OP([RX])
 	///
 	/// # Examples:
 	/// ```
@@ -24,8 +24,8 @@ pub enum Form {
 	/// NOT R10, R11
 	/// ```
 	Two,
-	/// A Form Four instruction has the following encoding scheme:
-	/// OP DR, RX, #immed16 ; DR <- [RX] OP #immed16
+	/// A form four instruction has the following encoding scheme:
+	/// OP, DR, RX, #immed16 ; DR <- [RX] OP #immed16
 	///
 	/// # Examples:
 	/// ```
@@ -33,8 +33,8 @@ pub enum Form {
 	///	AND R4, R4, #0x1
 	/// ```
 	Four,
-	/// A Form Five instruction has the following encoding scheme:
-	/// OP DR, #immed20 ; DR <- OP(#immed20)
+	/// A form five instruction has the following encoding scheme:
+	/// OP, DR, #immed20
 	///
 	/// # Examples:
 	/// ```

@@ -6,7 +6,6 @@ use std::str::FromStr;
 
 /// Convert the soruce code into meaningful lexemes.
 pub fn lexer(mut buffer: String) -> Vec<Token> {
-	buffer.pop(); // Remove the trailing new line.
 	// Pad separators with whitespace
 	buffer = buffer.replace(",", " , ");
 	buffer = buffer.replace("[", " [ ");
@@ -60,7 +59,7 @@ mod tests {
 			Token::Seperator(Seperator::Comma),
 			Token::Register(Register::R10)
 		];
-		assert_eq!(tokens, lexer("add r5, r1, r10\n".to_string()));
+		assert_eq!(tokens, lexer("add r5, r1, r10".to_string()));
 	}
 
 	#[test]
@@ -71,7 +70,7 @@ mod tests {
 			Token::Seperator(Seperator::Comma),
 			Token::Register(Register::R5),
 		];
-		assert_eq!(tokens, lexer("MOV R3, R5 ; this is a comment\n".to_string()));
+		assert_eq!(tokens, lexer("MOV R3, R5 ; this is a comment".to_string()));
 	}
 
 	#[test]
@@ -84,7 +83,7 @@ mod tests {
 			Token::Seperator(Seperator::Comma),
 			Token::Literal(Literal::Immediate("10".to_string()))
 		];
-		assert_eq!(tokens, lexer("ADD R5, R1, #10\n".to_string()));
+		assert_eq!(tokens, lexer("ADD R5, R1, #10".to_string()));
 	}
 
 	#[test]
@@ -95,7 +94,7 @@ mod tests {
 			Token::Seperator(Seperator::Comma),
 			Token::Literal(Literal::Immediate("0x55555".to_string()))
 		];
-		assert_eq!(tokens, lexer("mvn r6, #0x55555\n".to_string()));
+		assert_eq!(tokens, lexer("mvn r6, #0x55555".to_string()));
 	}
 
 }

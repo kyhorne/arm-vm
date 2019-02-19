@@ -131,6 +131,23 @@ impl Processor {
 		println!("{:17}[{}] = {:#010X}", "Result", get_name(dr_addr), result);
 		self.registers[dr_addr] = result;
 	}
+	/// Load program into main memory.
+	pub fn load_program(&mut self, program: &Vec<u32>) {
+		let mut pc_ptr = 0;
+		for expression in program {
+			self.write_to_mm(pc_ptr, expression);
+			pc_ptr += 1;
+		}
+	}
+	/// Run program loaded into main memory.
+	pub fn run(&mut self) {
+		while self.main_memory[self.get_pc()] != 0 {
+			// Fetch and decode a new instruction.
+			self.fetch_and_decode(); // This function will invoke the execute function.
+			// Increment the program counter.
+			self.incr_pc();
+		}
+	}
 	/// Execute machine in REPL mode.
 	pub fn repl(&mut self) {
 		loop {
