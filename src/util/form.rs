@@ -1,4 +1,7 @@
+use crate::util::opcode::Opcode;
+
 #[derive(
+	Clone,
 	Debug,
 	PartialEq
 )]
@@ -38,4 +41,20 @@ pub enum Form {
 	///	MOV R5, #0xF1234
 	/// ```
 	Five
+}
+
+impl Form {
+	/// Get the expression length associated with a given form and opcode.
+	pub fn get_expr_length(&self, opcode: &Opcode) -> usize {
+		let mut delta = 0;
+		match *opcode {
+			Opcode::STR | Opcode::LDR => delta = 2,
+			_ => ()
+
+		}
+		match *self {
+			Form::One | Form::Four => 6 + delta,
+			Form::Two | Form::Five => 4 + delta
+		}
+	}
 }

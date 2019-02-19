@@ -1,3 +1,10 @@
+use crate::util::register::get_name;
+use crate::vm::Address;
+use crate::vm::Payload;
+use super::form::Form;
+use super::opcode::Opcode;
+use num_traits::FromPrimitive;
+
 /// Mask defines the bits used to access specific data from an instruction.
 pub type Mask = u32;
 
@@ -39,4 +46,73 @@ impl EncoderDecoder {
 			EncoderDecoder::Immed20 => (0x000FFFFF, 0x00)
 		}
 	}
+}
+
+/// Check whether the mode bit is toggled for a given payload.
+pub fn is_mode_bit_toggled(payload: Payload) -> bool {
+	let (mode_mask, _) = EncoderDecoder::Mode.get_encoding();
+	payload & mode_mask != 0
+}
+
+// Parse the address of the destination register from a payload.
+pub fn get_dr_addr(payload: Payload) -> Address {
+	let (dr_mask, dr_offset) = EncoderDecoder::DR.get_encoding();
+	let dr_addr = ((payload & dr_mask) >> dr_offset) as Address;
+	println!("{:19}{}", "Dr: ", get_name(dr_addr));
+	dr_addr
+}
+
+// Parse the address of register x from a payload.
+pub fn get_rx_addr(payload: Payload) -> Address {
+	let (rx_mask, rx_offset) = EncoderDecoder::RX.get_encoding();
+	((payload & rx_mask) >> rx_offset) as Address
+}
+
+// Parse the address of register y from a payload.
+pub fn get_ry_addr(payload: Payload) -> Address {
+	let (ry_mask, ry_offset) = EncoderDecoder::RY.get_encoding();
+	((payload & ry_mask) >> ry_offset) as Address
+}
+
+// Parse the immediate 20-bit value from a payload.
+pub fn get_immed16(payload: Payload) -> Payload {
+	let (immed16_mask, immed16_offset) = EncoderDecoder::Immed16.get_encoding();
+	let immed16 = (payload & immed16_mask) >> immed16_offset;
+	println!("{:24}{:#010X}", "Immed16: ", immed16);
+	immed16
+}
+
+// Parse the immediate 20-bit value from a payload.
+pub fn get_immed20(payload: Payload) -> Payload {
+	let (immed20_mask, immed20_offset) = EncoderDecoder::Immed20.get_encoding();
+	let immed20 = (payload & immed20_mask) >> immed20_offset;
+	println!("{:24}{:#010X}", "Immed20: ", immed20);
+	immed20
+}
+
+// Get the encoded opcode and its form from a given payload.
+pub fn get_form_and_opcode(payload: Payload) -> Result<(Opcode, Form), ()> {
+	// Extract the opcode from the payload.
+	let (opcode_mask, opcode_offset) = EncoderDecoder::Opcode.get_encoding();
+	let opcode = (payload & opcode_mask) >> opcode_offset;
+	if let Some(opcode) = FromPrimitive::from_u32(opcode) {
+		match opcode {
+			Opcode::ADD | Opcode::AND | Opcode::EOR | Opcode::MUL | Opcode::ORR | Opcode::SUB => {
+				if is_mode_bit_toggled(payload) {
+					return Ok((opcode, Form::Four))
+				} else {
+					return Ok((opcode, Form::One))
+				};
+			}
+			Opcode::MOV | Opcode::MVN => {
+				if is_mode_bit_toggled(payload) {
+					return Ok((opcode, Form::Five))
+				} else {
+					return Ok((opcode, Form::Two))
+				};
+			}
+			_ => ()
+		}
+	}
+	return Err(())
 }
