@@ -146,11 +146,11 @@ impl Opcode {
 		self.get_bytecode().keys().map(|key| key.clone()).collect()
 	}
 	/// Get the opcode from a given bytecode.
-	pub fn get_opcode(bytecode: u32) -> Result<(Opcode), ()> {
+	pub fn get_opcode(bytecode: u32) -> Result<(Form, Opcode), ()> {
 		for opcode in Opcode::iter() {
-			for value in opcode.get_bytecode().values() {
+			for (key, value) in opcode.get_bytecode().iter() {
 				if value.clone() == bytecode {
-					return Ok(opcode.clone());
+					return Ok((*key, opcode.clone()));
 				}
 			}
 		}

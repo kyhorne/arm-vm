@@ -24,7 +24,6 @@ impl StateMachine<ReadyState> {
 	pub fn handler(mut self) -> Result<Form, ()>  {
 		if let Some(Token::Opcode(opcode)) = self.tokens.pop() {
 			self.forms = reducer(opcode.get_forms(), opcode, self.tokens.len() + 1);
-			println!("{:?}", self.forms);
 			if self.forms.is_empty() {
 				return Err(())
 			}

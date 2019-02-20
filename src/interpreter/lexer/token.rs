@@ -16,8 +16,11 @@ impl Literal {
 	pub fn is_valid(&mut self) -> bool {
         match self {
             Literal::Immediate(immed) => {
-				let is_valid = immed.starts_with("#");
+				let mut is_valid = immed.starts_with("#");
 				immed.remove(0); // Remove prefix
+				if let Err(_) = immed.parse::<u32>() {
+					is_valid = false
+				}
 				is_valid
 			}
         }

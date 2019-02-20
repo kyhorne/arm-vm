@@ -1,3 +1,4 @@
+use crate::util::opcode::Form;
 use crate::util::opcode::Opcode;
 use crate::vm::Address;
 use crate::vm::Payload;
@@ -41,7 +42,7 @@ impl EncoderDecoder {
 	}
 }
 
-pub fn get_opcode(payload: Payload) -> Result<(Opcode), ()> {
+pub fn get_form_and_opcode(payload: Payload) -> Result<((Form, Opcode)), ()> {
 	let (opcode_mask, opcode_offset) = EncoderDecoder::Opcode.get_encoding();
 	let bytecode = ((payload & opcode_mask) >> opcode_offset) as u32;
 	Opcode::get_opcode(bytecode)
@@ -70,7 +71,7 @@ pub fn get_ry_addr(payload: Payload) -> Address {
 pub fn get_immed16(payload: Payload) -> Payload {
 	let (immed16_mask, immed16_offset) = EncoderDecoder::Immed16.get_encoding();
 	let immed16 = (payload & immed16_mask) >> immed16_offset;
-	println!("{:24}{:#010X}", "Immed16: ", immed16);
+	println!("{:30}{:#010X}", "Immed16: ", immed16);
 	immed16
 }
 
@@ -78,6 +79,6 @@ pub fn get_immed16(payload: Payload) -> Payload {
 pub fn get_immed20(payload: Payload) -> Payload {
 	let (immed20_mask, immed20_offset) = EncoderDecoder::Immed20.get_encoding();
 	let immed20 = (payload & immed20_mask) >> immed20_offset;
-	println!("{:24}{:#010X}", "Immed20: ", immed20);
+	println!("{:30}{:#010X}", "Immed20: ", immed20);
 	immed20
 }
