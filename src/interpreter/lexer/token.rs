@@ -1,10 +1,5 @@
 use super::super::super::util::{Opcode, Register};
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
-pub enum Literal {
-    #[strum(default = "true")]
-    Immediate(String),
-}
 impl Literal {
     /// Check whether immediate has a valid prefix.
     pub fn is_valid(&mut self) -> bool {
@@ -51,6 +46,18 @@ pub enum Comment {
     Comment,
 }
 
+#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+pub enum Literal {
+    #[strum(default = "true")]
+    Immediate(String),
+}
+
+#[derive(Clone, EnumString, Eq, Debug, Hash, PartialEq)]
+pub enum Label {
+    #[strum(default = "true")]
+    Name(String),
+}
+
 #[derive(Clone, Debug, PartialEq)]
 /// Parsable tokens.
 pub enum Token {
@@ -58,4 +65,5 @@ pub enum Token {
     Register(Register),
     Literal(Literal),
     Seperator(Seperator),
+    Label(Label),
 }

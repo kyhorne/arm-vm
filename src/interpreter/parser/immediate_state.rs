@@ -1,5 +1,5 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Seperator, Token};
+use super::super::lexer::{Label, Seperator, Token};
 use super::super::parser::{CloseBrace, ImmediateState, StateMachine};
 
 impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
@@ -8,12 +8,13 @@ impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
             state: CloseBrace,
             tokens: machine.tokens,
             forms: machine.forms,
+            labels: machine.labels,
         }
     }
 }
 
 impl StateMachine<ImmediateState> {
-    pub fn handler(mut self) -> Result<Form, ()> {
+    pub fn handler(mut self) -> Result<(Form, Vec<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Seperator(seperator)) => {
                 match seperator {
@@ -33,10 +34,10 @@ impl StateMachine<ImmediateState> {
             }
             None => {
                 if self.forms.contains(&Form::Four) {
-                    return Ok(Form::Four);
+                    return Ok((Form::Four, self.labels));
                 }
                 if self.forms.contains(&Form::Five) {
-                    return Ok(Form::Five);
+                    return Ok((Form::Five, self.labels));
                 }
                 return Err(());
             }

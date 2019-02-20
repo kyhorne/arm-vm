@@ -1,9 +1,10 @@
-use super::interpreter::repl;
+use super::interpreter::{repl, Label};
 use super::util::{
     get_dr_addr, get_form_and_opcode, get_immed16, get_immed20, get_rx_addr, get_ry_addr, Form,
     Opcode,
 };
 use super::util::{get_name, Register};
+use std::collections::HashMap;
 
 /// The initial value of all registers in the processor.
 pub const INIT_REGISTER_VALUE: Payload = 0;
@@ -20,6 +21,7 @@ const N_REGISTERS_IN_MAIN_MEMORY: Address = std::u32::MAX as usize;
 pub struct Processor {
     registers: Vec<u32>,
     main_memory: Vec<u32>,
+    labels: HashMap<Label, Address>,
 }
 
 pub type Payload = u32;
@@ -31,6 +33,7 @@ impl Processor {
         Processor {
             registers: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_PROCESSOR],
             main_memory: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_MAIN_MEMORY],
+            labels: HashMap::new(),
         }
     }
     /// Get the contents stored in the program counter.
@@ -224,10 +227,17 @@ impl Processor {
         println!("{:23}[{}] = {:#010X}", "Result:", get_name(dr_addr), result);
         self.registers[dr_addr] = result;
     }
+    fn register_labels(&mut self, labels: Vec<Label>) {
+        for label in labels {
+            self.labels.insert(label, self.get_pc());
+        }
+    }
+
     /// Load program into main memory.
-    pub fn load_program(&mut self, program: &Vec<u32>) {
+    pub fn load_program(&mut self, program: &Vec<(u32, Vec<Label>)>) {
         let mut pc_ptr = 0;
-        for payload in program {
+        for (payload, labels) in program {
+            self.register_labels(labels.to_vec());
             self.write_to_mm(pc_ptr, *payload);
             pc_ptr += 1;
         }
@@ -243,7 +253,8 @@ impl Processor {
     /// Execute machine in REPL mode.
     pub fn repl(&mut self) {
         loop {
-            if let Ok(instruction) = repl() {
+            if let Ok((instruction, labels)) = repl() {
+                self.register_labels(labels.to_vec());
                 // Write instruction from standard input to the main memory pointed to by the
                 // program counter.
                 self.write_to_mm(self.get_pc(), instruction);
