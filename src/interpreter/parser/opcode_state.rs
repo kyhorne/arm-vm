@@ -1,3 +1,4 @@
+use super::super::super::util::Form;
 use super::super::lexer::Token;
 use super::super::parser::{OpcodeState, RegisterState, StateMachine};
 
@@ -12,7 +13,7 @@ impl From<StateMachine<OpcodeState>> for StateMachine<RegisterState> {
 }
 
 impl StateMachine<OpcodeState> {
-	pub fn handler(mut self) -> Result<(), ()> {
+	pub fn handler(mut self) -> Result<Form, ()> {
 		if let Some(Token::Register(_)) = self.tokens.pop() {
 			return StateMachine::<RegisterState>::from(self).handler();
 		}

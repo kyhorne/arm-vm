@@ -2,13 +2,20 @@ mod lexer;
 mod parser;
 mod assembler;
 
-use super::interpreter::lexer::lexer;
-use std::io::{BufReader, BufRead, stdin , stdout, Write};
-
+use std::io::{
+	BufReader,
+	BufRead,
+	stdin ,
+	stdout,
+	Write
+};
 use std::fs::File;
 
+use super::interpreter::lexer::lexer;
+use super::vm::Instruction;
+
 /// Read and evaluate the buffered message from standard input.
-pub fn repl() -> Option<u32> {
+pub fn repl() -> Result<Instruction, ()> {
     print!(">>> ");
 	let _ = stdout().flush();
 	let mut buffer = String::new();
@@ -19,28 +26,29 @@ pub fn repl() -> Option<u32> {
 			let mut tokens = lexer(buffer);
 			// Parse tokens returned from the lexer.
 			match parser::run(&mut tokens) {
-				Ok(())  => {
+				Ok(form)  => {
 					// Encode expression into bytecode.
-					let payload = assembler::get_bytecode(&mut tokens);
-					return Some(payload);
+					let payload = assembler::get_bytecode(&mut tokens, form);
+					return Ok(Instruction{form: Some(form), payload: payload});
 				},
 				Err(()) => println!("Invalid syntax!")
 			}
 		}
 		_ => ()
 	}
-	return None
+	return Err(())
 }
 
-pub fn read_file() -> Vec<u32> {
+pub fn read_file() -> Vec<Instruction> {
 	let mut program = Vec::new();
 	if let Ok(file) = File::open("assembly/pgrm1.asm") {
 		for buffer in BufReader::new(file).lines() {
 			match buffer {
 				Ok(expression) => {
 					let mut tokens = lexer(expression);
-					if let Ok(_) = parser::run(&mut tokens) {
-						program.push(assembler::get_bytecode(&mut tokens))
+					if let Ok(form) = parser::run(&mut tokens) {
+						let payload = assembler::get_bytecode(&mut tokens, form);
+						program.push(Instruction{form: Some(form), payload: payload});
 					}
 				}
 				_ => ()

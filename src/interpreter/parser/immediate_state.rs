@@ -13,18 +13,30 @@ impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
 }
 
 impl StateMachine<ImmediateState> {
-	pub fn handler(mut self) -> Result<(), ()> {
+	pub fn handler(mut self) -> Result<Form, ()> {
 		match self.tokens.pop() {
 			Some(Token::Seperator(seperator)) => {
 				match seperator {
-					Seperator::CloseBrace =>
-						return StateMachine::<CloseBrace>::from(self).handler(),
+					Seperator::CloseBrace => {
+						// Cannot be form one.
+						if self.forms.contains(&Form::One) {
+							self.forms = vec![Form::Four];
+						}
+						// Cannot be form two.
+						if self.forms.contains(&Form::Two) {
+							self.forms = vec![Form::Five];
+						}
+						return StateMachine::<CloseBrace>::from(self).handler()
+					}
 					_ => ()
 				}
 			}
 			None => {
-				if self.forms.contains(&Form::Four) || self.forms.contains(&Form::Five) {
-					return Ok(())
+				if self.forms.contains(&Form::Four) {
+					return Ok(Form::Four)
+				}
+				if self.forms.contains(&Form::Five) {
+					return Ok(Form::Five)
 				}
 				return Err(())
 			}

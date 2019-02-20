@@ -1,6 +1,7 @@
 use super::super::lexer::Token;
 pub use super::super::parser::StateMachine;
 use super::super::parser::{OpcodeState, ReadyState};
+use super::super::super::util::{Form, reducer};
 
 impl From<StateMachine<ReadyState>> for StateMachine<OpcodeState> {
     fn from(machine: StateMachine<ReadyState>) -> StateMachine<OpcodeState> {
@@ -20,17 +21,14 @@ impl StateMachine<ReadyState> {
 			forms:  Vec::new()
 		}
 	}
-	pub fn handler(mut self) -> Result<(), ()>  {
+	pub fn handler(mut self) -> Result<Form, ()>  {
 		if let Some(Token::Opcode(opcode)) = self.tokens.pop() {
-			let forms = opcode.get_forms();
-			let mut expression_lengths = Vec::new();
-			for form in &forms {
-				expression_lengths.push(form.get_expr_length(&opcode));
+			self.forms = reducer(opcode.get_forms(), opcode, self.tokens.len() + 1);
+			println!("{:?}", self.forms);
+			if self.forms.is_empty() {
+				return Err(())
 			}
-			if expression_lengths.contains(&(self.tokens.len() + 1)) {
-				self.forms = forms;
-				return StateMachine::<OpcodeState>::from(self).handler();
-			}
+			return StateMachine::<OpcodeState>::from(self).handler();
 		}
 		return Err(())
 	}
