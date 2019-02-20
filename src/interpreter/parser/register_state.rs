@@ -23,7 +23,7 @@ impl From<StateMachine<RegisterState>> for StateMachine<CommaState> {
 }
 
 impl StateMachine<RegisterState> {
-	pub fn handler(mut self) -> Result<(), ()>  {
+	pub fn handler(mut self) -> Result<Form, ()>  {
 		let token = self.tokens.pop();
 		match token {
 			Some(Token::Seperator(seperator)) => {
@@ -38,8 +38,11 @@ impl StateMachine<RegisterState> {
 				}
 			},
 			None => {
-				if self.forms.contains(&Form::One) || self.forms.contains(&Form::Two) {
-					return Ok(())
+				if self.forms.contains(&Form::One) {
+					return Ok(Form::One)
+				}
+				if self.forms.contains(&Form::Two) {
+					return Ok(Form::Two)
 				}
 			}
 			_ => ()

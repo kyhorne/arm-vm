@@ -16,8 +16,11 @@ impl Literal {
 	pub fn is_valid(&mut self) -> bool {
         match self {
             Literal::Immediate(immed) => {
-				let is_valid = immed.starts_with("#");
+				let mut is_valid = immed.starts_with("#");
 				immed.remove(0); // Remove prefix
+				if let Err(_) = immed.parse::<u32>() {
+					is_valid = false
+				}
 				is_valid
 			}
         }
@@ -35,34 +38,6 @@ impl Literal {
 			}
 		}
 	}
-}
-
-#[cfg(test)]
-mod tests {
-
-	use super::*;
-
-    #[test]
-    fn test_is_valid() {
-		// Test valid immediate value.
-		let mut immed = Literal::Immediate("#123".to_string());
-		assert!(immed.is_valid());
-		// Test invalid immediate value.
-		immed = Literal::Immediate("456".to_string());
-		assert!(!immed.is_valid());
-	}
-
-	#[test]
-    fn test_get_value() {
-		// Test immediate value encoded in base 10.
-		let mut immed = Literal::Immediate("123".to_string());
-		assert_eq!(immed.get_value(), 123);
-		// Test immediate value encoded in base 16.
-		immed = Literal::Immediate("0x999".to_string());
-		assert_eq!(immed.get_value(), 0x999);
-	}
-
-
 }
 
 #[derive(

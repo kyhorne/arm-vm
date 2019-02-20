@@ -1,5 +1,6 @@
 use super::super::lexer::Token;
-use super::super::parser::{OpenBrace, StateMachine, RegisterState};
+use super::super::super::util::Form;
+use super::super::parser::{ImmediateState, OpenBrace, StateMachine, RegisterState};
 
 impl From<StateMachine<OpenBrace>> for StateMachine<RegisterState> {
     fn from(machine: StateMachine<OpenBrace>) -> StateMachine<RegisterState> {
@@ -11,11 +12,23 @@ impl From<StateMachine<OpenBrace>> for StateMachine<RegisterState> {
     }
 }
 
+impl From<StateMachine<OpenBrace>> for StateMachine<ImmediateState> {
+    fn from(machine: StateMachine<OpenBrace>) -> StateMachine<ImmediateState> {
+        StateMachine {
+            state:  ImmediateState,
+			tokens: machine.tokens,
+			forms:  machine.forms
+        }
+    }
+}
+
 impl StateMachine<OpenBrace> {
-	pub fn handler(mut self) -> Result<(), ()> {
-		if let Some(Token::Register(_)) = self.tokens.pop() {
-			return StateMachine::<RegisterState>::from(self).handler();
+	pub fn handler(mut self) -> Result<Form, ()> {
+		match self.tokens.pop() {
+			Some(Token::Literal(_))  => StateMachine::<ImmediateState>::from(self).handler(),
+			Some(Token::Register(_)) => StateMachine::<RegisterState>::from(self).handler(),
+			_ => Err(())
 		}
-		return Err(())
+
 	}
 }
