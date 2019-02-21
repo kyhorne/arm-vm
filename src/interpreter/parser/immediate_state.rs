@@ -14,7 +14,7 @@ impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
 }
 
 impl StateMachine<ImmediateState> {
-    pub fn handler(mut self) -> Result<(Form, Vec<Label>), ()> {
+    pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Seperator(seperator)) => {
                 match seperator {
@@ -34,10 +34,10 @@ impl StateMachine<ImmediateState> {
             }
             None => {
                 if self.forms.contains(&Form::Four) {
-                    return Ok((Form::Four, self.labels));
+                    return Ok((Some(Form::Four), self.labels));
                 }
                 if self.forms.contains(&Form::Five) {
-                    return Ok((Form::Five, self.labels));
+                    return Ok((Some(Form::Five), self.labels));
                 }
                 return Err(());
             }

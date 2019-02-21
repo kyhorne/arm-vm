@@ -81,6 +81,7 @@ impl Processor {
     }
     /// Fetch and decode instruction pointed to by the program counter.
     fn fetch_and_decode(&mut self) {
+        println!("----------------------------------------");
         println!("{:30}{:#010X} ", "Pc:", self.get_pc());
         // Read data from the main memory pointed to by the program counter.
         let payload = self.read_from_mm();
@@ -324,7 +325,7 @@ impl Processor {
             Opcode::BLT => self.exe_bcc(self.flag.n != self.flag.v),
             Opcode::BGT => self.exe_bcc(!self.flag.z && (self.flag.n == self.flag.v)),
             Opcode::BLE => self.exe_bcc(self.flag.z || (self.flag.n != self.flag.v)),
-            Opcode::BAL => self.exe_bcc(true),
+            Opcode::B => self.exe_bcc(true),
             _ => (),
         }
     }
@@ -355,15 +356,20 @@ impl Processor {
         }
     }
     /// Load program into main memory.
-    pub fn load_program(&mut self, program: &Vec<(u32, Vec<Label>, Form)>) {
+    pub fn load_program(&mut self, program: &Vec<(Option<u32>, Vec<Label>, Option<Form>)>) {
         let mut pc_ptr = 0;
         for (payload, labels, form) in program {
             match form {
-                Form::Six => self.register_variable_reference(labels.to_vec(), Some(pc_ptr)),
+                Some(Form::Six) => self.register_variable_reference(labels.to_vec(), Some(pc_ptr)),
                 _ => self.register_variable_declaration(labels.to_vec(), Some(pc_ptr as u32)),
             }
-            self.write_to_mm(pc_ptr, *payload);
-            pc_ptr += 1;
+            match payload {
+                Some(payload) => {
+                    self.write_to_mm(pc_ptr, *payload);
+                    pc_ptr += 1;
+                }
+                _ => (),
+            }
         }
     }
     /// Run program loaded into main memory.
@@ -381,15 +387,20 @@ impl Processor {
                         // Else read-eval the next instruction from standard input.
             if let Ok((instruction, labels, form)) = repl() {
                 match form {
-                    Form::Six => self.register_variable_reference(labels.to_vec(), None),
+                    Some(Form::Six) => self.register_variable_reference(labels.to_vec(), None),
                     _ => self.register_variable_declaration(labels.to_vec(), None),
                 }
-                // Write instruction from standard input to the main memory pointed to by the
-                // program counter.
-                self.write_to_mm(self.get_pc(), instruction);
-                // Fetch and decode a new instruction.
-                self.fetch_and_decode(); // This function will invoke the execute function.
-                self.incr_pc(); // Increment the program counter.
+                match instruction {
+                    Some(instruction) => {
+                        // Write instruction from standard input to the main memory pointed to by the
+                        // program counter.
+                        self.write_to_mm(self.get_pc(), instruction);
+                        // Fetch and decode a new instruction.
+                        self.fetch_and_decode(); // This function will invoke the execute function.
+                        self.incr_pc(); // Increment the program counter.
+                    }
+                    _ => (),
+                }
             }
         }
     }
