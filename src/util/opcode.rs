@@ -58,7 +58,7 @@ pub enum Opcode {
     #[strum(serialize = "BLE", serialize = "ble")]
     BLE,
     #[strum(serialize = "B", serialize = "b", serialize = "BAL", serialize = "bal")]
-    BAL,
+    B,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -106,7 +106,7 @@ impl Opcode {
     fn iter() -> Iter<'static, Opcode> {
         static OPCODE: [Opcode; 26] = [
             ADD, SUB, MOV, AND, ORR, EOR, MVN, MUL, LDR, STR, CMP, BEQ, BNE, BHS, BLO, BMI, BPL,
-            BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, BAL,
+            BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, B,
         ];
         OPCODE.into_iter()
     }
@@ -144,7 +144,7 @@ impl Opcode {
             BLT => [(Six, 0x80C)].iter().cloned().collect(),
             BGT => [(Six, 0x80D)].iter().cloned().collect(),
             BLE => [(Six, 0x80E)].iter().cloned().collect(),
-            BAL => [(Six, 0x80F)].iter().cloned().collect(),
+            B => [(Six, 0x80F)].iter().cloned().collect(),
         }
     }
     /// Get the forms associated with a given opcode.
@@ -165,7 +165,7 @@ impl Opcode {
     pub fn is_bcc(&self) -> bool {
         match *self {
             BEQ | BNE | BHS | BLO | BMI | BPL | BVS | BVC | BHI | BLS | BGE | BLT | BGT | BLE
-            | BAL => true,
+            | B => true,
             _ => false,
         }
     }

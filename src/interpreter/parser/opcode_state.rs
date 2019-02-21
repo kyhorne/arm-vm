@@ -14,13 +14,13 @@ impl From<StateMachine<OpcodeState>> for StateMachine<RegisterState> {
 }
 
 impl StateMachine<OpcodeState> {
-    pub fn handler(mut self) -> Result<(Form, Vec<Label>), ()> {
+    pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Register(_)) => return StateMachine::<RegisterState>::from(self).handler(),
             Some(Token::Label(label)) => {
                 self.labels.push(label);
                 if self.forms.contains(&Form::Six) {
-                    return Ok((Form::Six, self.labels));
+                    return Ok((Some(Form::Six), self.labels));
                 }
                 return Err(());
             }

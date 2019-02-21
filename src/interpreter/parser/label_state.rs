@@ -1,10 +1,10 @@
 use super::super::super::util::{reducer, Form};
 use super::super::lexer::{Label, Token};
 pub use super::super::parser::StateMachine;
-use super::super::parser::{LabelState, OpcodeState, ReadyState};
+use super::super::parser::{LabelState, OpcodeState};
 
-impl From<StateMachine<ReadyState>> for StateMachine<OpcodeState> {
-    fn from(machine: StateMachine<ReadyState>) -> StateMachine<OpcodeState> {
+impl From<StateMachine<LabelState>> for StateMachine<OpcodeState> {
+    fn from(machine: StateMachine<LabelState>) -> StateMachine<OpcodeState> {
         StateMachine {
             state: OpcodeState,
             tokens: machine.tokens,
@@ -14,26 +14,7 @@ impl From<StateMachine<ReadyState>> for StateMachine<OpcodeState> {
     }
 }
 
-impl From<StateMachine<ReadyState>> for StateMachine<LabelState> {
-    fn from(machine: StateMachine<ReadyState>) -> StateMachine<LabelState> {
-        StateMachine {
-            state: LabelState,
-            tokens: machine.tokens,
-            forms: machine.forms,
-            labels: machine.labels,
-        }
-    }
-}
-
-impl StateMachine<ReadyState> {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        StateMachine {
-            state: ReadyState,
-            tokens: tokens,
-            forms: Vec::new(),
-            labels: Vec::new(),
-        }
-    }
+impl StateMachine<LabelState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
@@ -45,8 +26,9 @@ impl StateMachine<ReadyState> {
             }
             Some(Token::Label(label)) => {
                 self.labels.push(label);
-                return StateMachine::<LabelState>::from(self).handler();
+                return self.handler();
             }
+            None => return Ok((None, self.labels)),
             _ => return Err(()),
         }
     }
