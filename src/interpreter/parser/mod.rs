@@ -7,9 +7,9 @@ mod ready_state;
 mod register_state;
 
 use super::super::util::Form;
-use super::lexer::Token;
+use super::lexer::{Label, Token};
 
-/// The syntax is analyzed using a finite state machine
+/// The syntax is analyzed using a finite state machine.
 struct CloseBrace;
 struct CommaState;
 struct ImmediateState;
@@ -25,10 +25,11 @@ pub struct StateMachine<S> {
     pub tokens: Vec<Token>,
     // Possible forms this expression may satisfy.
     pub forms: Vec<Form>,
+    pub labels: Vec<Label>,
 }
 
 /// Run the state machine.
-pub fn run(tokens: &mut Vec<Token>) -> Result<(Form), ()> {
+pub fn run(tokens: &mut Vec<Token>) -> Result<(Form, Vec<Label>), ()> {
     tokens.reverse();
     return ready_state::StateMachine::new(tokens.to_vec()).handler();
 }

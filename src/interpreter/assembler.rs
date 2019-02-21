@@ -18,6 +18,12 @@ impl Assembler {
             self.payload |= bytecode << opcode_offset
         }
     }
+    fn encode_bcc(&mut self, form: Form, opcode: Opcode) {
+        let (_, bcc_offset) = EncoderDecoder::Bcc.get_encoding();
+        if let Some(bytecode) = opcode.get_bytecode().get(&form) {
+            self.payload |= bytecode << bcc_offset
+        }
+    }
     /// Encode the destination register.
     fn encode_dr(&mut self, register: Register) {
         let (_, dr_offset) = EncoderDecoder::DR.get_encoding();
@@ -62,7 +68,11 @@ pub fn get_bytecode(tokens: &mut Vec<Token>, form: Form) -> u32 {
     // Convert the expression to bytecode.
     let mut assembler = Assembler::new();
     if let Some(Token::Opcode(opcode)) = opcode {
-        assembler.encode_opcode(form, opcode.clone());
+        if opcode.is_bcc() {
+            assembler.encode_bcc(form, opcode.clone());
+        } else {
+            assembler.encode_opcode(form, opcode.clone());
+        }
     }
     // Encode the destination register.
     if let Some(Token::Register(register)) = dr {
@@ -76,13 +86,11 @@ pub fn get_bytecode(tokens: &mut Vec<Token>, form: Form) -> u32 {
             _ => (),
         }
     }
-    {
-        // Encode operand one if it exists.
-        match op1 {
-            Some(Token::Register(register)) => assembler.encode_rx(register.clone()),
-            Some(Token::Literal(immed20)) => assembler.encode_immed20(immed20.clone()),
-            _ => (),
-        }
+    // Encode operand one if it exists.
+    match op1 {
+        Some(Token::Register(register)) => assembler.encode_rx(register.clone()),
+        Some(Token::Literal(immed20)) => assembler.encode_immed20(immed20.clone()),
+        _ => (),
     }
     assembler.payload
 }

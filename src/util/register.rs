@@ -3,7 +3,7 @@ use strum::AsStaticRef;
 
 use num_derive::FromPrimitive;
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq, FromPrimitive, AsStaticStr)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, FromPrimitive, AsStaticStr, ToString)]
 pub enum Register {
     #[strum(serialize = "R0", serialize = "r0")]
     R0 = 0x0,

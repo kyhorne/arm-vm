@@ -3,7 +3,7 @@ mod token;
 use std::str::FromStr;
 
 use super::super::util::{Opcode, Register};
-pub use token::{Comment, Literal, Seperator, Token};
+pub use token::*;
 
 /// Convert the soruce code into meaningful lexemes.
 pub fn lexer(mut buffer: String) -> Vec<Token> {
@@ -40,6 +40,10 @@ pub fn lexer(mut buffer: String) -> Vec<Token> {
         if let Ok(_) = Comment::from_str(&token) {
             // Comments indicate the end of an expression.
             break;
+        }
+        if let Ok(label) = Label::from_str(&token) {
+            tokens.push(Token::Label(label));
+            continue;
         }
     }
     return tokens;

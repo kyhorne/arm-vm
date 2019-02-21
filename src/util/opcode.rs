@@ -27,6 +27,38 @@ pub enum Opcode {
     STR,
     #[strum(serialize = "LDR", serialize = "ldr")]
     LDR,
+    #[strum(serialize = "CMP", serialize = "cmp")]
+    CMP,
+    #[strum(serialize = "BEQ", serialize = "beq")]
+    BEQ,
+    #[strum(serialize = "BNE", serialize = "bne")]
+    BNE,
+    #[strum(serialize = "BHS", serialize = "bhs")]
+    BHS,
+    #[strum(serialize = "BLO", serialize = "blo")]
+    BLO,
+    #[strum(serialize = "BMI", serialize = "bmi")]
+    BMI,
+    #[strum(serialize = "BPL", serialize = "bpl")]
+    BPL,
+    #[strum(serialize = "BVS", serialize = "bvs")]
+    BVS,
+    #[strum(serialize = "BVC", serialize = "bvc")]
+    BVC,
+    #[strum(serialize = "BHI", serialize = "bhi")]
+    BHI,
+    #[strum(serialize = "BLS", serialize = "bls")]
+    BLS,
+    #[strum(serialize = "BGE", serialize = "bge")]
+    BGE,
+    #[strum(serialize = "BLT", serialize = "blt")]
+    BLT,
+    #[strum(serialize = "BGT", serialize = "bgt")]
+    BGT,
+    #[strum(serialize = "BLE", serialize = "ble")]
+    BLE,
+    #[strum(serialize = "B", serialize = "b", serialize = "BAL", serialize = "bal")]
+    BAL,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -67,11 +99,15 @@ pub enum Form {
     /// MVN R9, #0x0
     /// ```
     Five,
+    Six,
 }
 
 impl Opcode {
     fn iter() -> Iter<'static, Opcode> {
-        static OPCODE: [Opcode; 10] = [ADD, SUB, MOV, AND, ORR, EOR, MVN, MUL, LDR, STR];
+        static OPCODE: [Opcode; 26] = [
+            ADD, SUB, MOV, AND, ORR, EOR, MVN, MUL, LDR, STR, CMP, BEQ, BNE, BHS, BLO, BMI, BPL,
+            BVS, BVC, BHI, BLS, BGE, BLT, BGT, BLE, BAL,
+        ];
         OPCODE.into_iter()
     }
     /// Get the bytecode and form associated from a given opcode.
@@ -89,10 +125,26 @@ impl Opcode {
                 .iter()
                 .cloned()
                 .collect(),
-            STR => [(Two, 0x44), (Four, 0x45), (One, 0x46), (Five, 0x47)]
+            STR => [(Two, 0x34), (Four, 0x35), (One, 0x36), (Five, 0x37)]
                 .iter()
                 .cloned()
                 .collect(),
+            CMP => [(Two, 0x47), (Five, 0x57)].iter().cloned().collect(),
+            BEQ => [(Six, 0x801)].iter().cloned().collect(),
+            BNE => [(Six, 0x802)].iter().cloned().collect(),
+            BHS => [(Six, 0x803)].iter().cloned().collect(),
+            BLO => [(Six, 0x804)].iter().cloned().collect(),
+            BMI => [(Six, 0x805)].iter().cloned().collect(),
+            BPL => [(Six, 0x806)].iter().cloned().collect(),
+            BVS => [(Six, 0x807)].iter().cloned().collect(),
+            BVC => [(Six, 0x808)].iter().cloned().collect(),
+            BHI => [(Six, 0x809)].iter().cloned().collect(),
+            BLS => [(Six, 0x80A)].iter().cloned().collect(),
+            BGE => [(Six, 0x80B)].iter().cloned().collect(),
+            BLT => [(Six, 0x80C)].iter().cloned().collect(),
+            BGT => [(Six, 0x80D)].iter().cloned().collect(),
+            BLE => [(Six, 0x80E)].iter().cloned().collect(),
+            BAL => [(Six, 0x80F)].iter().cloned().collect(),
         }
     }
     /// Get the forms associated with a given opcode.
@@ -110,6 +162,13 @@ impl Opcode {
         }
         return Err(());
     }
+    pub fn is_bcc(&self) -> bool {
+        match *self {
+            BEQ | BNE | BHS | BLO | BMI | BPL | BVS | BVC | BHI | BLS | BGE | BLT | BGT | BLE
+            | BAL => true,
+            _ => false,
+        }
+    }
 }
 
 impl Form {
@@ -123,6 +182,7 @@ impl Form {
         match *self {
             One | Four => 6 + delta,
             Two | Five => 4 + delta,
+            Six => 2,
         }
     }
 }

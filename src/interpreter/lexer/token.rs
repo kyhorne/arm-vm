@@ -1,10 +1,5 @@
 use super::super::super::util::{Opcode, Register};
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
-pub enum Literal {
-    #[strum(default = "true")]
-    Immediate(String),
-}
 impl Literal {
     /// Check whether immediate has a valid prefix.
     pub fn is_valid(&mut self) -> bool {
@@ -35,7 +30,7 @@ impl Literal {
     }
 }
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Seperator {
     #[strum(serialize = ",")]
     Comma,
@@ -45,17 +40,30 @@ pub enum Seperator {
     CloseBrace,
 }
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Comment {
     #[strum(serialize = ";")]
     Comment,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
+pub enum Literal {
+    #[strum(default = "true")]
+    Immediate(String),
+}
+
+#[derive(Clone, EnumString, Eq, Debug, Hash, PartialEq, ToString)]
+pub enum Label {
+    #[strum(default = "true")]
+    Name(String),
+}
+
+#[derive(Clone, Debug, PartialEq, ToString)]
 /// Parsable tokens.
 pub enum Token {
     Opcode(Opcode),
     Register(Register),
     Literal(Literal),
     Seperator(Seperator),
+    Label(Label),
 }

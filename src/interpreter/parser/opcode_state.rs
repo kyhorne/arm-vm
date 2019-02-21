@@ -1,5 +1,5 @@
 use super::super::super::util::Form;
-use super::super::lexer::Token;
+use super::super::lexer::{Label, Token};
 use super::super::parser::{OpcodeState, RegisterState, StateMachine};
 
 impl From<StateMachine<OpcodeState>> for StateMachine<RegisterState> {
@@ -8,15 +8,23 @@ impl From<StateMachine<OpcodeState>> for StateMachine<RegisterState> {
             state: RegisterState,
             tokens: machine.tokens,
             forms: machine.forms,
+            labels: machine.labels,
         }
     }
 }
 
 impl StateMachine<OpcodeState> {
-    pub fn handler(mut self) -> Result<Form, ()> {
-        if let Some(Token::Register(_)) = self.tokens.pop() {
-            return StateMachine::<RegisterState>::from(self).handler();
+    pub fn handler(mut self) -> Result<(Form, Vec<Label>), ()> {
+        match self.tokens.pop() {
+            Some(Token::Register(_)) => return StateMachine::<RegisterState>::from(self).handler(),
+            Some(Token::Label(label)) => {
+                self.labels.push(label);
+                if self.forms.contains(&Form::Six) {
+                    return Ok((Form::Six, self.labels));
+                }
+                return Err(());
+            }
+            _ => return Err(()),
         }
-        return Err(());
     }
 }

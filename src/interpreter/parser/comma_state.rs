@@ -1,5 +1,5 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Seperator, Token};
+use super::super::lexer::{Label, Seperator, Token};
 
 use super::super::parser::{CommaState, ImmediateState, OpenBrace, RegisterState, StateMachine};
 
@@ -9,6 +9,7 @@ impl From<StateMachine<CommaState>> for StateMachine<ImmediateState> {
             state: ImmediateState,
             tokens: machine.tokens,
             forms: machine.forms,
+            labels: machine.labels,
         }
     }
 }
@@ -19,6 +20,7 @@ impl From<StateMachine<CommaState>> for StateMachine<RegisterState> {
             state: RegisterState,
             tokens: machine.tokens,
             forms: machine.forms,
+            labels: machine.labels,
         }
     }
 }
@@ -29,12 +31,13 @@ impl From<StateMachine<CommaState>> for StateMachine<OpenBrace> {
             state: OpenBrace,
             tokens: machine.tokens,
             forms: machine.forms,
+            labels: machine.labels,
         }
     }
 }
 
 impl StateMachine<CommaState> {
-    pub fn handler(mut self) -> Result<Form, ()> {
+    pub fn handler(mut self) -> Result<(Form, Vec<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Register(_)) => return StateMachine::<RegisterState>::from(self).handler(),
             Some(Token::Literal(immed)) => {
