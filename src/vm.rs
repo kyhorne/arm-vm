@@ -24,12 +24,19 @@ struct Flag {
     c: bool, // Carry.
 }
 
+struct Variable {
+    /// Defines the label as a location (address) in a program;
+    decleration: HashMap<Label, u32>,
+    /// Label is interpreted by the assembler as identifying the target address.
+    reference: HashMap<Address, Label>,
+}
+
 /// A virtual processor has virtual registers and memory.
 pub struct Processor {
     registers: Vec<u32>,
     main_memory: Vec<u32>,
-    labels: HashMap<Label, Address>,
-    flags: Flag,
+    variable: Variable,
+    flag: Flag,
 }
 
 pub type Payload = u32;
@@ -41,8 +48,11 @@ impl Processor {
         Processor {
             registers: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_PROCESSOR],
             main_memory: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_MAIN_MEMORY],
-            labels: HashMap::new(),
-            flags: Flag {
+            variable: Variable {
+                decleration: HashMap::new(),
+                reference: HashMap::new(),
+            },
+            flag: Flag {
                 v: false,
                 z: false,
                 n: false,
@@ -53,6 +63,9 @@ impl Processor {
     /// Get the contents stored in the program counter.
     fn get_pc(&self) -> Address {
         self.registers[Register::PC as Address] as Address
+    }
+    fn set_pc(&mut self, payload: Payload) {
+        self.registers[Register::PC as Address] = payload
     }
     /// Increment the program counter by 1.
     fn incr_pc(&mut self) {
@@ -68,6 +81,7 @@ impl Processor {
     }
     /// Fetch and decode instruction pointed to by the program counter.
     fn fetch_and_decode(&mut self) {
+        println!("{:30}{:#010X} ", "Pc:", self.get_pc());
         // Read data from the main memory pointed to by the program counter.
         let payload = self.read_from_mm();
         println!("{:17}{:>8} = {:#010X} ", "Payload:", "MMem[[PC]]", payload);
@@ -175,37 +189,37 @@ impl Processor {
     fn update_flags(&mut self, op1: u32, op2: u32) {
         // Update carry flag.
         if let Some(result) = op1.checked_sub(op2) {
-            self.flags.c = false;
+            self.flag.c = false;
             // Update zero flag.
             if result == 0 {
-                self.flags.z = true;
+                self.flag.z = true;
             } else {
-                self.flags.z = false;
+                self.flag.z = false;
             }
             // Always positive.
-            self.flags.n = false;
+            self.flag.n = false;
         } else {
-            self.flags.c = true;
+            self.flag.c = true;
         }
         let op1 = op1 as i32;
         let op2 = op2 as i32;
         // Check oVerflow flag.
         if let Some(result) = op1.checked_sub(op2) {
-            self.flags.v = false;
+            self.flag.v = false;
             // Update zero flag.
             if result == 0 {
-                self.flags.z = true;
+                self.flag.z = true;
             } else {
-                self.flags.z = false;
+                self.flag.z = false;
             }
             // Update negative flag.
             if result < 0 {
-                self.flags.n = true;
+                self.flag.n = true;
             } else {
-                self.flags.n = false;
+                self.flag.n = false;
             }
         } else {
-            self.flags.v = true;
+            self.flag.v = true;
         }
     }
     fn form_four_handler(&mut self, opcode: Opcode, payload: Payload) {
@@ -283,23 +297,34 @@ impl Processor {
             _ => (),
         }
     }
+    fn exe_bcc(&mut self, cond: bool) {
+        if cond {
+            println!("Equal");
+            if let Some(label) = self.variable.reference.get(&self.get_pc()) {
+                if let Some(payload) = self.variable.decleration.get(label) {
+                    self.set_pc(*payload)
+                }
+            }
+        }
+    }
+
     fn form_six_handler(&mut self, opcode: Opcode) {
         match opcode {
-            BEQ => (),
-            BNE => (),
-            BHS => (),
-            BLO => (),
-            BMI => (),
-            BPL => (),
-            BVS => (),
-            BVC => (),
-            BHI => (),
-            BLS => (),
-            BGE => (),
-            BLT => (),
-            BGT => (),
-            BLE => (),
-            BAL => (),
+            Opcode::BEQ => self.exe_bcc(self.flag.z),
+            Opcode::BNE => self.exe_bcc(!self.flag.z),
+            Opcode::BHS => self.exe_bcc(self.flag.c),
+            Opcode::BLO => self.exe_bcc(!self.flag.c),
+            Opcode::BMI => self.exe_bcc(self.flag.n),
+            Opcode::BPL => self.exe_bcc(!self.flag.n),
+            Opcode::BVS => self.exe_bcc(self.flag.v),
+            Opcode::BVC => self.exe_bcc(!self.flag.v),
+            Opcode::BHI => self.exe_bcc(self.flag.c && !self.flag.z),
+            Opcode::BLS => self.exe_bcc(!self.flag.c || self.flag.z),
+            Opcode::BGE => self.exe_bcc(self.flag.n == self.flag.v),
+            Opcode::BLT => self.exe_bcc(self.flag.n != self.flag.v),
+            Opcode::BGT => self.exe_bcc(!self.flag.z && (self.flag.n == self.flag.v)),
+            Opcode::BLE => self.exe_bcc(self.flag.z || (self.flag.n != self.flag.v)),
+            Opcode::BAL => self.exe_bcc(true),
             _ => (),
         }
     }
@@ -309,17 +334,28 @@ impl Processor {
         println!("{:23}[{}] = {:#010X}", "Result:", get_name(dr_addr), result);
         self.registers[dr_addr] = result;
     }
-    fn register_labels(&mut self, labels: Vec<Label>) {
+    fn register_variable_reference(&mut self, labels: Vec<Label>) {
         for label in labels {
-            self.labels.insert(label, self.get_pc());
+            self.variable.reference.insert(self.get_pc(), label);
         }
     }
-
+    fn register_variable_decleration(&mut self, labels: Vec<Label>) {
+        for label in labels {
+            self.variable
+                .decleration
+                .insert(label, self.get_pc() as u32);
+        }
+    }
     /// Load program into main memory.
-    pub fn load_program(&mut self, program: &Vec<(u32, Vec<Label>)>) {
+    pub fn load_program(&mut self, program: &Vec<(u32, Vec<Label>, Form)>) {
         let mut pc_ptr = 0;
-        for (payload, labels) in program {
-            self.register_labels(labels.to_vec());
+        for (payload, labels, form) in program {
+            match form {
+                Form::Six => self.register_variable_reference(labels.to_vec()),
+                _ => self.register_variable_decleration(labels.to_vec()),
+            }
+            self.register_variable_reference(labels.to_vec());
+            self.register_variable_decleration(labels.to_vec());
             self.write_to_mm(pc_ptr, *payload);
             pc_ptr += 1;
         }
@@ -337,8 +373,11 @@ impl Processor {
         loop {
             self.run(); // If there exist an instruction already in main memory then fetch and execute.
                         // Else read-eval the next instruction from standard input.
-            if let Ok((instruction, labels)) = repl() {
-                self.register_labels(labels.to_vec());
+            if let Ok((instruction, labels, form)) = repl() {
+                match form {
+                    Form::Six => self.register_variable_reference(labels.to_vec()),
+                    _ => self.register_variable_decleration(labels.to_vec()),
+                }
                 // Write instruction from standard input to the main memory pointed to by the
                 // program counter.
                 self.write_to_mm(self.get_pc(), instruction);

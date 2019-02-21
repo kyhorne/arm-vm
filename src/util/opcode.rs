@@ -57,7 +57,7 @@ pub enum Opcode {
     BGT,
     #[strum(serialize = "BLE", serialize = "ble")]
     BLE,
-    #[strum(serialize = "BAL", serialize = "bal")]
+    #[strum(serialize = "B", serialize = "b", serialize = "BAL", serialize = "bal")]
     BAL,
 }
 
@@ -125,7 +125,7 @@ impl Opcode {
                 .iter()
                 .cloned()
                 .collect(),
-            STR => [(Two, 0x44), (Four, 0x45), (One, 0x46), (Five, 0x47)]
+            STR => [(Two, 0x34), (Four, 0x35), (One, 0x36), (Five, 0x37)]
                 .iter()
                 .cloned()
                 .collect(),
