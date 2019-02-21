@@ -30,7 +30,7 @@ impl Literal {
     }
 }
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Seperator {
     #[strum(serialize = ",")]
     Comma,
@@ -40,25 +40,25 @@ pub enum Seperator {
     CloseBrace,
 }
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Comment {
     #[strum(serialize = ";")]
     Comment,
 }
 
-#[derive(Clone, EnumString, Eq, Debug, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Literal {
     #[strum(default = "true")]
     Immediate(String),
 }
 
-#[derive(Clone, EnumString, Eq, Debug, Hash, PartialEq)]
+#[derive(Clone, EnumString, Eq, Debug, Hash, PartialEq, ToString)]
 pub enum Label {
     #[strum(default = "true")]
     Name(String),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, ToString)]
 /// Parsable tokens.
 pub enum Token {
     Opcode(Opcode),

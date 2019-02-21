@@ -11,7 +11,8 @@ pub type Offset = u8;
 
 /// EncoderDecoder list the types of information encoded into an instruction.
 pub enum EncoderDecoder {
-    Opcode,  /* The opcode bits define the type of operation to execute. */
+    Opcode, /* The opcode bits define the type of operation to execute. */
+    Bcc,
     DR,      /* The address of the destination register. */
     RX,      /* The address of the register for the first operand. */
     RY,      /* The address of the register for the second operand. */
@@ -25,6 +26,7 @@ impl EncoderDecoder {
         match self {
             /* The opcode is encoded in the two most significant bytes. */
             EncoderDecoder::Opcode => (0xFF000000, 0x18),
+            EncoderDecoder::Bcc => (0xFFF00000, 0x14),
             /* The address of the destination register is encoded in the third most significant
              * byte. */
             EncoderDecoder::DR => (0x00F00000, 0x14),
@@ -44,6 +46,12 @@ impl EncoderDecoder {
 
 pub fn get_form_and_opcode(payload: Payload) -> Result<((Form, Opcode)), ()> {
     let (opcode_mask, opcode_offset) = EncoderDecoder::Opcode.get_encoding();
+    let bytecode = ((payload & opcode_mask) >> opcode_offset) as u32;
+    Opcode::get_opcode(bytecode)
+}
+
+pub fn get_form_and_bcc(payload: Payload) -> Result<((Form, Opcode)), ()> {
+    let (opcode_mask, opcode_offset) = EncoderDecoder::Bcc.get_encoding();
     let bytecode = ((payload & opcode_mask) >> opcode_offset) as u32;
     Opcode::get_opcode(bytecode)
 }

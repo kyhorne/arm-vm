@@ -1,7 +1,7 @@
 use super::interpreter::{repl, Label};
 use super::util::{
-    get_dr_addr, get_form_and_opcode, get_immed16, get_immed20, get_rx_addr, get_ry_addr, Form,
-    Opcode,
+    get_dr_addr, get_form_and_bcc, get_form_and_opcode, get_immed16, get_immed20, get_rx_addr,
+    get_ry_addr, Form, Opcode,
 };
 use super::util::{get_name, Register};
 use std::collections::HashMap;
@@ -80,6 +80,14 @@ impl Processor {
                 Form::Two => self.form_two_handler(opcode, *payload),
                 Form::Four => self.form_four_handler(opcode, *payload),
                 Form::Five => self.form_five_handler(opcode, *payload),
+                _ => (),
+            }
+        } else if let Ok((form, opcode)) = get_form_and_bcc(*payload) {
+            println!("{:24}{:?}", "Opcode:", opcode);
+            // Execute the handler based on instruction form.
+            match form {
+                Form::Six => self.form_six_handler(opcode),
+                _ => (),
             }
         }
     }
@@ -242,7 +250,7 @@ impl Processor {
                     payload
                 );
             }
-            Opcode::CMP => {}
+            Opcode::CMP => self.update_flags(dr_cont, op1),
             _ => (),
         }
     }
@@ -272,6 +280,26 @@ impl Processor {
                 println!("{:18}MMem[{:#0X}] = {:#010X}", "Result:", op1, payload);
             }
             Opcode::CMP => self.update_flags(dr_cont, op1),
+            _ => (),
+        }
+    }
+    fn form_six_handler(&mut self, opcode: Opcode) {
+        match opcode {
+            BEQ => (),
+            BNE => (),
+            BHS => (),
+            BLO => (),
+            BMI => (),
+            BPL => (),
+            BVS => (),
+            BVC => (),
+            BHI => (),
+            BLS => (),
+            BGE => (),
+            BLT => (),
+            BGT => (),
+            BLE => (),
+            BAL => (),
             _ => (),
         }
     }
@@ -307,6 +335,8 @@ impl Processor {
     /// Execute machine in REPL mode.
     pub fn repl(&mut self) {
         loop {
+            self.run(); // If there exist an instruction already in main memory then fetch and execute.
+                        // Else read-eval the next instruction from standard input.
             if let Ok((instruction, labels)) = repl() {
                 self.register_labels(labels.to_vec());
                 // Write instruction from standard input to the main memory pointed to by the
