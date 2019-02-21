@@ -301,6 +301,7 @@ impl Processor {
         if cond {
             if let Some(label) = self.variable.reference.get(&self.get_pc()) {
                 if let Some(payload) = self.variable.declaration.get(label) {
+                    // Subtract one because the main loop will increment program counter.
                     self.set_pc(*payload - 1)
                 }
             }
@@ -333,26 +334,24 @@ impl Processor {
         println!("{:23}[{}] = {:#010X}", "Result:", get_name(dr_addr), result);
         self.registers[dr_addr] = result;
     }
-    fn register_variable_reference(&mut self, labels: Vec<Label>) {
+    fn register_variable_reference(&mut self, labels: Vec<Label>, pc_ptr: Option<Address>) {
         for label in labels {
-            self.variable.reference.insert(self.get_pc(), label);
+            if let Some(pc_ptr) = pc_ptr {
+                self.variable.reference.insert(pc_ptr, label);
+            } else {
+                self.variable.reference.insert(self.get_pc(), label);
+            }
         }
     }
-    fn register_variable_declaration(&mut self, labels: Vec<Label>) {
+    fn register_variable_declaration(&mut self, labels: Vec<Label>, pc_ptr: Option<u32>) {
         for label in labels {
-            self.variable
-                .declaration
-                .insert(label, self.get_pc() as u32);
-        }
-    }
-    fn register_variable_reference_with_pc(&mut self, labels: Vec<Label>, pc_ptr: Address) {
-        for label in labels {
-            self.variable.reference.insert(pc_ptr, label);
-        }
-    }
-    fn register_variable_declaration_with_pc(&mut self, labels: Vec<Label>, pc_ptr: u32) {
-        for label in labels {
-            self.variable.declaration.insert(label, pc_ptr);
+            if let Some(pc_ptr) = pc_ptr {
+                self.variable.declaration.insert(label, pc_ptr);
+            } else {
+                self.variable
+                    .declaration
+                    .insert(label, self.get_pc() as u32);
+            }
         }
     }
     /// Load program into main memory.
@@ -360,8 +359,8 @@ impl Processor {
         let mut pc_ptr = 0;
         for (payload, labels, form) in program {
             match form {
-                Form::Six => self.register_variable_reference_with_pc(labels.to_vec(), pc_ptr),
-                _ => self.register_variable_declaration_with_pc(labels.to_vec(), pc_ptr as u32),
+                Form::Six => self.register_variable_reference(labels.to_vec(), Some(pc_ptr)),
+                _ => self.register_variable_declaration(labels.to_vec(), Some(pc_ptr as u32)),
             }
             self.write_to_mm(pc_ptr, *payload);
             pc_ptr += 1;
@@ -382,8 +381,8 @@ impl Processor {
                         // Else read-eval the next instruction from standard input.
             if let Ok((instruction, labels, form)) = repl() {
                 match form {
-                    Form::Six => self.register_variable_reference(labels.to_vec()),
-                    _ => self.register_variable_declaration(labels.to_vec()),
+                    Form::Six => self.register_variable_reference(labels.to_vec(), None),
+                    _ => self.register_variable_declaration(labels.to_vec(), None),
                 }
                 // Write instruction from standard input to the main memory pointed to by the
                 // program counter.
