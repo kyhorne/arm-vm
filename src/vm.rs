@@ -26,7 +26,7 @@ struct Flag {
 
 struct Variable {
     /// Defines the label as a location (address) in a program;
-    decleration: HashMap<Label, u32>,
+    declaration: HashMap<Label, u32>,
     /// Label is interpreted by the assembler as identifying the target address.
     reference: HashMap<Address, Label>,
 }
@@ -49,7 +49,7 @@ impl Processor {
             registers: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_PROCESSOR],
             main_memory: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_MAIN_MEMORY],
             variable: Variable {
-                decleration: HashMap::new(),
+                declaration: HashMap::new(),
                 reference: HashMap::new(),
             },
             flag: Flag {
@@ -299,10 +299,9 @@ impl Processor {
     }
     fn exe_bcc(&mut self, cond: bool) {
         if cond {
-            println!("Equal");
             if let Some(label) = self.variable.reference.get(&self.get_pc()) {
-                if let Some(payload) = self.variable.decleration.get(label) {
-                    self.set_pc(*payload)
+                if let Some(payload) = self.variable.declaration.get(label) {
+                    self.set_pc(*payload - 1)
                 }
             }
         }
@@ -339,11 +338,21 @@ impl Processor {
             self.variable.reference.insert(self.get_pc(), label);
         }
     }
-    fn register_variable_decleration(&mut self, labels: Vec<Label>) {
+    fn register_variable_declaration(&mut self, labels: Vec<Label>) {
         for label in labels {
             self.variable
-                .decleration
+                .declaration
                 .insert(label, self.get_pc() as u32);
+        }
+    }
+    fn register_variable_reference_with_pc(&mut self, labels: Vec<Label>, pc_ptr: Address) {
+        for label in labels {
+            self.variable.reference.insert(pc_ptr, label);
+        }
+    }
+    fn register_variable_declaration_with_pc(&mut self, labels: Vec<Label>, pc_ptr: u32) {
+        for label in labels {
+            self.variable.declaration.insert(label, pc_ptr);
         }
     }
     /// Load program into main memory.
@@ -351,11 +360,9 @@ impl Processor {
         let mut pc_ptr = 0;
         for (payload, labels, form) in program {
             match form {
-                Form::Six => self.register_variable_reference(labels.to_vec()),
-                _ => self.register_variable_decleration(labels.to_vec()),
+                Form::Six => self.register_variable_reference_with_pc(labels.to_vec(), pc_ptr),
+                _ => self.register_variable_declaration_with_pc(labels.to_vec(), pc_ptr as u32),
             }
-            self.register_variable_reference(labels.to_vec());
-            self.register_variable_decleration(labels.to_vec());
             self.write_to_mm(pc_ptr, *payload);
             pc_ptr += 1;
         }
@@ -376,7 +383,7 @@ impl Processor {
             if let Ok((instruction, labels, form)) = repl() {
                 match form {
                     Form::Six => self.register_variable_reference(labels.to_vec()),
-                    _ => self.register_variable_decleration(labels.to_vec()),
+                    _ => self.register_variable_declaration(labels.to_vec()),
                 }
                 // Write instruction from standard input to the main memory pointed to by the
                 // program counter.
