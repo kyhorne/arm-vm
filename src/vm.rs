@@ -17,11 +17,19 @@ const N_REGISTERS_IN_PROCESSOR: Address = 16;
 /// memory locations.
 const N_REGISTERS_IN_MAIN_MEMORY: Address = std::u32::MAX as usize;
 
+struct Flag {
+    v: bool, // oVerflow.
+    z: bool, // Zero.
+    n: bool, // Negative.
+    c: bool, // Carry.
+}
+
 /// A virtual processor has virtual registers and memory.
 pub struct Processor {
     registers: Vec<u32>,
     main_memory: Vec<u32>,
     labels: HashMap<Label, Address>,
+    flags: Flag,
 }
 
 pub type Payload = u32;
@@ -34,6 +42,12 @@ impl Processor {
             registers: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_PROCESSOR],
             main_memory: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_MAIN_MEMORY],
             labels: HashMap::new(),
+            flags: Flag {
+                v: false,
+                z: false,
+                n: false,
+                c: false,
+            },
         }
     }
     /// Get the contents stored in the program counter.
@@ -116,10 +130,11 @@ impl Processor {
             _ => (),
         }
     }
+
     fn form_two_handler(&mut self, opcode: Opcode, payload: Payload) {
         // Parse the destination address.
         let dr_addr = get_dr_addr(payload);
-        let dr_cont = self.registers[dr_addr];
+        let dr_cont = self.registers[dr_addr]; // The destination register contents.
         println!("{:23}[{}] = {:#010X}", "Dr: ", get_name(dr_addr), dr_cont);
         // Define operand 1 by retrieving the content pointed to by register x.
         let rx_addr = get_rx_addr(payload);
@@ -145,7 +160,44 @@ impl Processor {
                     payload
                 );
             }
+            Opcode::CMP => self.update_flags(dr_cont, op1),
             _ => (),
+        }
+    }
+    fn update_flags(&mut self, op1: u32, op2: u32) {
+        // Update carry flag.
+        if let Some(result) = op1.checked_sub(op2) {
+            self.flags.c = false;
+            // Update zero flag.
+            if result == 0 {
+                self.flags.z = true;
+            } else {
+                self.flags.z = false;
+            }
+            // Always positive.
+            self.flags.n = false;
+        } else {
+            self.flags.c = true;
+        }
+        let op1 = op1 as i32;
+        let op2 = op2 as i32;
+        // Check oVerflow flag.
+        if let Some(result) = op1.checked_sub(op2) {
+            self.flags.v = false;
+            // Update zero flag.
+            if result == 0 {
+                self.flags.z = true;
+            } else {
+                self.flags.z = false;
+            }
+            // Update negative flag.
+            if result < 0 {
+                self.flags.n = true;
+            } else {
+                self.flags.n = false;
+            }
+        } else {
+            self.flags.v = true;
         }
     }
     fn form_four_handler(&mut self, opcode: Opcode, payload: Payload) {
@@ -190,6 +242,7 @@ impl Processor {
                     payload
                 );
             }
+            Opcode::CMP => {}
             _ => (),
         }
     }
@@ -218,6 +271,7 @@ impl Processor {
                 self.main_memory[(self.registers[Register::PC as usize] + op1) as usize] = payload;
                 println!("{:18}MMem[{:#0X}] = {:#010X}", "Result:", op1, payload);
             }
+            Opcode::CMP => self.update_flags(dr_cont, op1),
             _ => (),
         }
     }

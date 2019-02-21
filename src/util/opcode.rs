@@ -27,6 +27,8 @@ pub enum Opcode {
     STR,
     #[strum(serialize = "LDR", serialize = "ldr")]
     LDR,
+    #[strum(serialize = "CMP", serialize = "cmp")]
+    CMP,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -71,7 +73,7 @@ pub enum Form {
 
 impl Opcode {
     fn iter() -> Iter<'static, Opcode> {
-        static OPCODE: [Opcode; 10] = [ADD, SUB, MOV, AND, ORR, EOR, MVN, MUL, LDR, STR];
+        static OPCODE: [Opcode; 11] = [ADD, SUB, MOV, AND, ORR, EOR, MVN, MUL, LDR, STR, CMP];
         OPCODE.into_iter()
     }
     /// Get the bytecode and form associated from a given opcode.
@@ -93,6 +95,7 @@ impl Opcode {
                 .iter()
                 .cloned()
                 .collect(),
+            CMP => [(Two, 0x47), (Five, 0x57)].iter().cloned().collect(),
         }
     }
     /// Get the forms associated with a given opcode.
