@@ -11,7 +11,7 @@
 ; R6 will contain –1.
 
 ; Equivalent C-like pseudo-code:
-; r6 = -1 // Initially, the value has not yet been.
+; r6 = -1 // Initially, the value has not yet been found.
 ; for(r7 = 0, r7 < r5, r7++) // r5 == array size
 ; {
 ;   if(array[r7] == r3) // Found!
