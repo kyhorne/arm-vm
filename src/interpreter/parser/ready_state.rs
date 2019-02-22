@@ -9,7 +9,7 @@ impl From<StateMachine<ReadyState>> for StateMachine<OpcodeState> {
             state: OpcodeState,
             tokens: machine.tokens,
             forms: machine.forms,
-            labels: machine.labels,
+            label: machine.label,
         }
     }
 }
@@ -20,7 +20,7 @@ impl From<StateMachine<ReadyState>> for StateMachine<LabelState> {
             state: LabelState,
             tokens: machine.tokens,
             forms: machine.forms,
-            labels: machine.labels,
+            label: machine.label,
         }
     }
 }
@@ -31,10 +31,10 @@ impl StateMachine<ReadyState> {
             state: ReadyState,
             tokens: tokens,
             forms: Vec::new(),
-            labels: Vec::new(),
+            label: None,
         }
     }
-    pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
+    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
                 self.forms = reducer(opcode.get_forms(), opcode, self.tokens.len() + 1);
@@ -44,7 +44,7 @@ impl StateMachine<ReadyState> {
                 return StateMachine::<OpcodeState>::from(self).handler();
             }
             Some(Token::Label(label)) => {
-                self.labels.push(label);
+                self.label = Some(label);
                 return StateMachine::<LabelState>::from(self).handler();
             }
             _ => return Err(()),
