@@ -8,19 +8,19 @@ impl From<StateMachine<OpcodeState>> for StateMachine<RegisterState> {
             state: RegisterState,
             tokens: machine.tokens,
             forms: machine.forms,
-            labels: machine.labels,
+            label: machine.label,
         }
     }
 }
 
 impl StateMachine<OpcodeState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
+    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Register(_)) => return StateMachine::<RegisterState>::from(self).handler(),
             Some(Token::Label(label)) => {
-                self.labels.push(label);
+                self.label = Some(label);
                 if self.forms.contains(&Form::Six) {
-                    return Ok((Some(Form::Six), self.labels));
+                    return Ok((Some(Form::Six), self.label));
                 }
                 return Err(());
             }

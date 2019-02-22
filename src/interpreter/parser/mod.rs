@@ -27,11 +27,11 @@ pub struct StateMachine<S> {
     pub tokens: Vec<Token>,
     // Possible forms this expression may satisfy.
     pub forms: Vec<Form>,
-    pub labels: Vec<Label>,
+    pub label: Option<Label>,
 }
 
 /// Run the state machine.
-pub fn run(tokens: &mut Vec<Token>) -> Result<(Option<Form>, Vec<Label>), ()> {
+pub fn run(tokens: &mut Vec<Token>) -> Result<(Option<Form>, Option<Label>), ()> {
     tokens.reverse();
     return ready_state::StateMachine::new(tokens.to_vec()).handler();
 }

@@ -8,7 +8,7 @@ impl From<StateMachine<RegisterState>> for StateMachine<CloseBrace> {
             state: CloseBrace,
             tokens: machine.tokens,
             forms: machine.forms,
-            labels: machine.labels,
+            label: machine.label,
         }
     }
 }
@@ -19,13 +19,13 @@ impl From<StateMachine<RegisterState>> for StateMachine<CommaState> {
             state: CommaState,
             tokens: machine.tokens,
             forms: machine.forms,
-            labels: machine.labels,
+            label: machine.label,
         }
     }
 }
 
 impl StateMachine<RegisterState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Vec<Label>), ()> {
+    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         let token = self.tokens.pop();
         match token {
             Some(Token::Seperator(seperator)) => match seperator {
@@ -35,10 +35,10 @@ impl StateMachine<RegisterState> {
             },
             None => {
                 if self.forms.contains(&Form::One) {
-                    return Ok((Some(Form::One), self.labels));
+                    return Ok((Some(Form::One), self.label));
                 }
                 if self.forms.contains(&Form::Two) {
-                    return Ok((Some(Form::Two), self.labels));
+                    return Ok((Some(Form::Two), self.label));
                 }
             }
             _ => (),
