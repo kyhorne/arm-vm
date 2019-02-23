@@ -1,8 +1,7 @@
 mod token;
 
+use super::super::util::{Literal, Opcode, Register};
 use std::str::FromStr;
-
-use super::super::util::{Opcode, Register};
 pub use token::*;
 
 /// Convert the soruce code into meaningful lexemes.

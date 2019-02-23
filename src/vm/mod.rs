@@ -1,10 +1,7 @@
-use super::assembler::{repl, Label};
-use super::util::{
-    get_dr_addr, get_form_and_bcc, get_form_and_opcode, get_immed16, get_immed20, get_rx_addr,
-    get_ry_addr, Form, Opcode,
-};
-use super::util::{get_name, Register};
 mod flag;
+
+use super::assembler::{repl, Label};
+use super::util::{get_name, EncoderDecoder, Form, Opcode, Register};
 use flag::*;
 use std::collections::HashMap;
 
@@ -74,20 +71,20 @@ impl Processor {
         println!("----------------------------------------");
         println!("{:30}{:#010X} ", "Pc:", self.get_pc());
         // Read data from the main memory pointed to by the program counter.
-        let payload = self.read_from_mm();
-        println!("{:17}{:>8} = {:#010X} ", "Payload:", "MMem[[PC]]", payload);
+        let instr = self.read_from_mm();
+        let mut decoder = EncoderDecoder::new(Some(*instr));
         // Extract the opcode and form from the payload.
-        if let Ok((form, opcode)) = get_form_and_opcode(*payload) {
+        if let Ok((form, opcode)) = decoder.get_form_and_opcode() {
             println!("{:24}{:?}", "Opcode:", opcode);
             // Execute the handler based on instruction form.
             match form {
-                Form::One => self.form_one_handler(opcode, *payload),
-                Form::Two => self.form_two_handler(opcode, *payload),
-                Form::Four => self.form_four_handler(opcode, *payload),
-                Form::Five => self.form_five_handler(opcode, *payload),
+                Form::One => self.form_one_handler(opcode, decoder),
+                Form::Two => self.form_two_handler(opcode, decoder),
+                Form::Four => self.form_four_handler(opcode, decoder),
+                Form::Five => self.form_five_handler(opcode, decoder),
                 _ => (),
             }
-        } else if let Ok((form, opcode)) = get_form_and_bcc(*payload) {
+        } else if let Ok((form, opcode)) = decoder.get_form_and_bcc() {
             println!("{:24}{:?}", "Opcode:", opcode);
             // Execute the handler based on instruction form.
             match form {
@@ -96,17 +93,17 @@ impl Processor {
             }
         }
     }
-    fn form_one_handler(&mut self, opcode: Opcode, payload: Payload) {
+    fn form_one_handler(&mut self, opcode: Opcode, mut decoder: EncoderDecoder) {
         // Parse the destination address.
-        let dr_addr = get_dr_addr(payload);
+        let dr_addr = decoder.get_dr();
         let dr_cont = self.registers[dr_addr];
         println!("{:23}[{}] = {:#010X}", "Dr: ", get_name(dr_addr), dr_cont);
         // Define operand 1 by retrieving the content pointed to by register x.
-        let rx_addr = get_rx_addr(payload);
+        let rx_addr = decoder.get_rx();
         let op1 = self.registers[rx_addr];
         println!("{:23}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
         // Define operand 1 by retrieving the content pointed to by register y.
-        let ry_addr = get_ry_addr(payload);
+        let ry_addr = decoder.get_ry();
         let op2 = self.registers[ry_addr];
         println!("{:23}[{}] = {:#010X}", "Ry:", get_name(ry_addr), op2);
         // Execute instruction based on the opcode.
@@ -144,13 +141,13 @@ impl Processor {
         }
     }
 
-    fn form_two_handler(&mut self, opcode: Opcode, payload: Payload) {
+    fn form_two_handler(&mut self, opcode: Opcode, mut decoder: EncoderDecoder) {
         // Parse the destination address.
-        let dr_addr = get_dr_addr(payload);
+        let dr_addr = decoder.get_dr();
         let dr_cont = self.registers[dr_addr]; // The destination register contents.
         println!("{:23}[{}] = {:#010X}", "Dr: ", get_name(dr_addr), dr_cont);
         // Define operand 1 by retrieving the content pointed to by register x.
-        let rx_addr = get_rx_addr(payload);
+        let rx_addr = decoder.get_rx();
         let op1 = self.registers[rx_addr];
         println!("{:23}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
         // Execute instruction based on the opcode.
@@ -178,17 +175,17 @@ impl Processor {
         }
     }
 
-    fn form_four_handler(&mut self, opcode: Opcode, payload: Payload) {
+    fn form_four_handler(&mut self, opcode: Opcode, mut decoder: EncoderDecoder) {
         // Parse the destination address.
-        let dr_addr = get_dr_addr(payload);
+        let dr_addr = decoder.get_dr();
         let dr_cont = self.registers[dr_addr];
         println!("{:23}[{}] = {:#010X}", "Dr: ", get_name(dr_addr), dr_cont);
         // Define operand 1 by retrieving the content pointed to by register x.
-        let rx_addr = get_rx_addr(payload);
+        let rx_addr = decoder.get_rx();
         let op1 = self.registers[rx_addr];
         println!("{:23}[{}] = {:#010X}", "Rx:", get_name(rx_addr), op1);
         // Define operand 2 by extracting the immediate 16-bit value.
-        let op2 = get_immed16(payload);
+        let op2 = decoder.get_immed16();
         // Execute instruction based on the opcode.
         match opcode {
             Opcode::ADD => self.execute(dr_addr, Box::new(move || op1 + op2)),
@@ -224,13 +221,13 @@ impl Processor {
             _ => (),
         }
     }
-    fn form_five_handler(&mut self, opcode: Opcode, payload: Payload) {
+    fn form_five_handler(&mut self, opcode: Opcode, mut decoder: EncoderDecoder) {
         // Parse the destination address.
-        let dr_addr = get_dr_addr(payload);
+        let dr_addr = decoder.get_dr();
         let dr_cont = self.registers[dr_addr];
         println!("{:23}[{}] = {:#010X}", "Dr: ", get_name(dr_addr), dr_cont);
         // Define operand1  by extracting the immediate 20-bit value.
-        let op1 = get_immed20(payload);
+        let op1 = decoder.get_immed20();
         // Execute instruction based on the opcode.
         match opcode {
             Opcode::MOV => self.execute(dr_addr, Box::new(move || op1)),
