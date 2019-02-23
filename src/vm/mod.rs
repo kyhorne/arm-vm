@@ -4,6 +4,8 @@ use super::util::{
     get_ry_addr, Form, Opcode,
 };
 use super::util::{get_name, Register};
+mod flag;
+use flag::*;
 use std::collections::HashMap;
 
 /// The initial value of all registers in the processor.
@@ -16,13 +18,6 @@ const N_REGISTERS_IN_PROCESSOR: Address = 16;
 /// The number of addressable registers in main memory. A 32-bit processor has 2^32 addressable
 /// memory locations.
 const N_REGISTERS_IN_MAIN_MEMORY: Address = std::u32::MAX as usize;
-
-struct Flag {
-    v: bool, // oVerflow.
-    z: bool, // Zero.
-    n: bool, // Negative.
-    c: bool, // Carry.
-}
 
 struct Variable {
     /// Defines the label as a location (address) in a program;
@@ -52,12 +47,7 @@ impl Processor {
                 declaration: HashMap::new(),
                 reference: HashMap::new(),
             },
-            flag: Flag {
-                v: false,
-                z: false,
-                n: false,
-                c: false,
-            },
+            flag: Flag::new(),
         }
     }
     /// Get the contents stored in the program counter.
@@ -183,46 +173,11 @@ impl Processor {
                     payload
                 );
             }
-            Opcode::CMP => self.update_flags(dr_cont, op1),
+            Opcode::CMP => self.flag.update(dr_cont, op1),
             _ => (),
         }
     }
-    fn update_flags(&mut self, op1: u32, op2: u32) {
-        // Update carry flag.
-        if let Some(result) = op1.checked_sub(op2) {
-            self.flag.c = false;
-            // Update zero flag.
-            if result == 0 {
-                self.flag.z = true;
-            } else {
-                self.flag.z = false;
-            }
-            // Always positive.
-            self.flag.n = false;
-        } else {
-            self.flag.c = true;
-        }
-        let op1 = op1 as i32;
-        let op2 = op2 as i32;
-        // Check oVerflow flag.
-        if let Some(result) = op1.checked_sub(op2) {
-            self.flag.v = false;
-            // Update zero flag.
-            if result == 0 {
-                self.flag.z = true;
-            } else {
-                self.flag.z = false;
-            }
-            // Update negative flag.
-            if result < 0 {
-                self.flag.n = true;
-            } else {
-                self.flag.n = false;
-            }
-        } else {
-            self.flag.v = true;
-        }
-    }
+
     fn form_four_handler(&mut self, opcode: Opcode, payload: Payload) {
         // Parse the destination address.
         let dr_addr = get_dr_addr(payload);
@@ -265,7 +220,7 @@ impl Processor {
                     payload
                 );
             }
-            Opcode::CMP => self.update_flags(dr_cont, op1),
+            Opcode::CMP => self.flag.update(dr_cont, op1),
             _ => (),
         }
     }
@@ -294,7 +249,7 @@ impl Processor {
                 self.main_memory[(self.registers[Register::PC as usize] + op1) as usize] = payload;
                 println!("{:18}MMem[{:#0X}] = {:#010X}", "Result:", op1, payload);
             }
-            Opcode::CMP => self.update_flags(dr_cont, op1),
+            Opcode::CMP => self.flag.update(dr_cont, op1),
             _ => (),
         }
     }
@@ -311,20 +266,24 @@ impl Processor {
 
     fn form_six_handler(&mut self, opcode: Opcode) {
         match opcode {
-            Opcode::BEQ => self.exe_bcc(self.flag.z),
-            Opcode::BNE => self.exe_bcc(!self.flag.z),
-            Opcode::BHS => self.exe_bcc(self.flag.c),
-            Opcode::BLO => self.exe_bcc(!self.flag.c),
-            Opcode::BMI => self.exe_bcc(self.flag.n),
-            Opcode::BPL => self.exe_bcc(!self.flag.n),
-            Opcode::BVS => self.exe_bcc(self.flag.v),
-            Opcode::BVC => self.exe_bcc(!self.flag.v),
-            Opcode::BHI => self.exe_bcc(self.flag.c && !self.flag.z),
-            Opcode::BLS => self.exe_bcc(!self.flag.c || self.flag.z),
-            Opcode::BGE => self.exe_bcc(self.flag.n == self.flag.v),
-            Opcode::BLT => self.exe_bcc(self.flag.n != self.flag.v),
-            Opcode::BGT => self.exe_bcc(!self.flag.z && (self.flag.n == self.flag.v)),
-            Opcode::BLE => self.exe_bcc(self.flag.z || (self.flag.n != self.flag.v)),
+            Opcode::BEQ => self.exe_bcc(self.flag.get_z()),
+            Opcode::BNE => self.exe_bcc(!self.flag.get_z()),
+            Opcode::BHS => self.exe_bcc(self.flag.get_c()),
+            Opcode::BLO => self.exe_bcc(!self.flag.get_c()),
+            Opcode::BMI => self.exe_bcc(self.flag.get_n()),
+            Opcode::BPL => self.exe_bcc(!self.flag.get_n()),
+            Opcode::BVS => self.exe_bcc(self.flag.get_v()),
+            Opcode::BVC => self.exe_bcc(!self.flag.get_v()),
+            Opcode::BHI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z()),
+            Opcode::BLS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z()),
+            Opcode::BGE => self.exe_bcc(self.flag.get_n() == self.flag.get_v()),
+            Opcode::BLT => self.exe_bcc(self.flag.get_n() != self.flag.get_v()),
+            Opcode::BGT => {
+                self.exe_bcc(!self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()))
+            }
+            Opcode::BLE => {
+                self.exe_bcc(self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()))
+            }
             Opcode::B => self.exe_bcc(true),
             _ => (),
         }
