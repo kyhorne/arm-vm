@@ -7,7 +7,7 @@ extern crate num_derive;
 extern crate clap;
 use clap::{App, Arg};
 
-mod interpreter;
+mod assembler;
 mod util;
 mod vm;
 
@@ -27,7 +27,7 @@ fn main() {
             Arg::with_name("read")
                 .short("R")
                 .long("read")
-                .help("Load assembly/pgrm1.asm into the main memory of the virtual machine and run")
+                .help("Load assembly/pgrm.asm into the main memory of the virtual machine and run")
                 .takes_value(false),
         )
         .get_matches();
@@ -35,7 +35,7 @@ fn main() {
         vm::Processor::new().repl();
     }
     if matches.is_present("read") {
-        let program = interpreter::read_file();
+        let program = assembler::read_file();
         let mut vm = vm::Processor::new();
         vm.load_program(&program);
         vm.run();

@@ -64,7 +64,7 @@ pub enum Opcode {
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Form {
     /// A form one instruction has the following encoding scheme:
-    /// OP, DR, RX, RY ; DR <- [RX] OP [RY]
+    /// OP DR, RX, RY ; DR <- [RX] OP [RY]
     ///
     /// # Examples:
     /// ```
@@ -73,7 +73,7 @@ pub enum Form {
     /// ```
     One,
     /// A form one instruction has the following encoding scheme:
-    /// OP, DR, RX ; DR <- OP([RX])
+    /// OP DR, RX ; DR <- OP([RX])
     ///
     /// # Examples:
     /// ```
@@ -82,7 +82,7 @@ pub enum Form {
     /// ```
     Two,
     /// A form four instruction has the following encoding scheme:
-    /// OP, DR, RX, #immed16 ; DR <- [RX] OP #immed16
+    /// OP DR, RX, #immed16 ; DR <- [RX] OP #immed16
     ///
     /// # Examples:
     /// ```
@@ -91,7 +91,7 @@ pub enum Form {
     /// ```
     Four,
     /// A form five instruction has the following encoding scheme:
-    /// OP, DR, #immed20
+    /// OP DR, #immed20 ; DR <- OP(#immed20)
     ///
     /// # Examples:
     /// ```
@@ -99,6 +99,7 @@ pub enum Form {
     /// MVN R9, #0x0
     /// ```
     Five,
+    /// TODO: Explanation.
     Six,
 }
 
@@ -188,12 +189,144 @@ impl Form {
 }
 
 /// Reduce the list of forms given an opcode and expression length.
-pub fn reducer(forms: Vec<Form>, opcode: Opcode, len: usize) -> Vec<Form> {
-    let mut reduce = Vec::new();
+pub fn reducer(forms: Vec<Form>, opcode: &Opcode, len: usize) -> Vec<Form> {
+    let mut reducer = Vec::new();
     for form in forms {
-        if len == form.get_expr_length(&opcode) {
-            reduce.push(form);
+        if len == form.get_expr_length(opcode) {
+            reducer.push(form);
         }
     }
-    reduce
+    reducer
+}
+
+#[cfg(test)]
+mod tests_opcode {
+
+    use super::*;
+
+    #[test]
+    fn test_get_bytecode() {
+        assert_eq!(
+            ADD.get_bytecode(),
+            [(One, 0x1), (Four, 0x21)].iter().cloned().collect()
+        );
+    }
+
+    #[test]
+    fn test_get_form() {
+        assert!(ADD.get_forms().contains(&One) && ADD.get_forms().contains(&Four));
+    }
+
+    #[test]
+    fn test_get_opcode_is_ok() {
+        assert!(Opcode::get_opcode(0x01).is_ok());
+    }
+
+    #[test]
+    fn test_get_opcode_form() {
+        if let Ok((form, _)) = Opcode::get_opcode(0x01) {
+            assert_eq!(form, One);
+        }
+    }
+
+    #[test]
+    fn test_get_opcode_opcode() {
+        if let Ok((_, opcode)) = Opcode::get_opcode(0x01) {
+            assert_eq!(opcode, ADD);
+        }
+    }
+
+    #[test]
+    fn test_is_bcc_is_true() {
+        assert!(BEQ.is_bcc());
+    }
+
+    #[test]
+    fn test_is_bcc_is_false() {
+        assert!(!ADD.is_bcc());
+    }
+
+}
+
+#[cfg(test)]
+mod tests_form {
+
+    use super::*;
+
+    #[test]
+    fn test_basic_form_one() {
+        assert_eq!(One.get_expr_length(&ADD), 6);
+    }
+
+    #[test]
+    fn test_ldr_str_form_one() {
+        assert_eq!(One.get_expr_length(&STR), 8);
+    }
+
+    #[test]
+    fn test_basic_form_two() {
+        assert_eq!(Two.get_expr_length(&MOV), 4);
+    }
+
+    #[test]
+    fn test_ldr_str_form_two() {
+        assert_eq!(Two.get_expr_length(&STR), 6);
+    }
+
+    #[test]
+    fn test_basic_form_four() {
+        assert_eq!(Four.get_expr_length(&ADD), 6);
+    }
+
+    #[test]
+    fn test_ldr_str_form_four() {
+        assert_eq!(Four.get_expr_length(&STR), 8);
+    }
+
+    #[test]
+    fn test_basic_form_five() {
+        assert_eq!(Five.get_expr_length(&MOV), 4);
+    }
+
+    #[test]
+    fn test_ldr_str_form_five() {
+        assert_eq!(Five.get_expr_length(&STR), 6);
+    }
+
+    #[test]
+    fn test_form_six() {
+        assert_eq!(Six.get_expr_length(&BEQ), 2);
+    }
+
+}
+
+#[cfg(test)]
+mod tests_reducer {
+
+    use super::*;
+
+    #[test]
+    fn test_basic_form_one_and_four() {
+        let forms = reducer(vec![One, Two, Four, Five], &ADD, 6);
+        assert!(forms.contains(&One) && forms.contains(&Four));
+    }
+
+    #[test]
+    fn test_ldr_str_form_one_and_four() {
+        let forms = reducer(vec![One, Four], &STR, 8);
+        assert!(forms.contains(&One) && forms.contains(&Four));
+    }
+
+    #[test]
+    fn test_basic_form_two_and_five() {
+        let forms = reducer(vec![Two, Five], &MOV, 4);
+        assert!(forms.contains(&Two) && forms.contains(&Five));
+    }
+
+    #[test]
+    fn test_ldr_str_form_two_and_five() {
+        let forms = reducer(vec![One, Two, Four, Five], &STR, 6);
+        assert!(forms.contains(&Two) && forms.contains(&Five));
+    }
+
 }

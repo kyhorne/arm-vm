@@ -90,3 +90,113 @@ pub fn get_immed20(payload: Payload) -> Payload {
     println!("{:30}{:#010X}", "Immed20: ", immed20);
     immed20
 }
+
+#[cfg(test)]
+mod tests_get_form_and_opcode {
+
+    use super::*;
+
+    #[test]
+    fn test_is_ok() {
+        if let Ok(_) = get_form_and_opcode(0x01000000) {
+            assert!(true);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_is_err() {
+        if let Err(_) = get_form_and_opcode(0x99000000) {
+            assert!(true);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_opcode() {
+        if let Ok((_, opcode)) = get_form_and_opcode(0x01000000) {
+            assert_eq!(opcode, Opcode::ADD);
+        }
+    }
+
+    #[test]
+    fn test_form() {
+        if let Ok((form, _)) = get_form_and_opcode(0x01000000) {
+            assert_eq!(form, Form::One);
+        }
+    }
+
+}
+
+#[cfg(test)]
+mod tests_get_form_and_bcc {
+
+    use super::*;
+
+    #[test]
+    fn test_is_ok() {
+        if let Ok(_) = get_form_and_bcc(0x80100000) {
+            assert!(true);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_is_err() {
+        if let Err(_) = get_form_and_bcc(0x99000000) {
+            assert!(true);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_opcode() {
+        if let Ok((_, opcode)) = get_form_and_bcc(0x80100000) {
+            assert_eq!(opcode, Opcode::BEQ);
+        }
+    }
+
+    #[test]
+    fn test_form() {
+        if let Ok((form, _)) = get_form_and_bcc(0x80100000) {
+            assert_eq!(form, Form::Six);
+        }
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_get_dr_addr() {
+        assert_eq!(get_dr_addr(0x00100000), 0x1);
+    }
+
+    #[test]
+    fn test_get_rx_addr() {
+        assert_eq!(get_rx_addr(0x00010000), 0x1);
+    }
+
+    #[test]
+    fn test_get_ry_addr() {
+        assert_eq!(get_ry_addr(0x00001000), 0x1);
+    }
+
+    #[test]
+    fn test_get_immed16() {
+        assert_eq!(get_immed16(0x00001234), 0x1234);
+    }
+
+    #[test]
+    fn test_get_immed20() {
+        assert_eq!(get_immed20(0x00012345), 0x12345);
+    }
+
+}
