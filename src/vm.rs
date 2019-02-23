@@ -189,7 +189,7 @@ impl Processor {
     }
     fn update_flags(&mut self, op1: u32, op2: u32) {
         // Update carry flag.
-        if let Some(result) = op1.checked_sub(op2) {
+        if let Some(result) = op1.checked_add(!op2) {
             self.flag.c = false;
             // Update zero flag.
             if result == 0 {
@@ -205,7 +205,7 @@ impl Processor {
         let op1 = op1 as i32;
         let op2 = op2 as i32;
         // Check oVerflow flag.
-        if let Some(result) = op1.checked_sub(op2) {
+        if let Some(result) = op1.checked_add(!op2) {
             self.flag.v = false;
             // Update zero flag.
             if result == 0 {
@@ -545,202 +545,215 @@ mod tests_translator {
 
     #[test]
     fn test_form_two_cmp() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R1 as usize] = 0x2C000000;
+        vm.registers[R2 as usize] = 0xD2FFFFFF;
+        vm.form_two_handler(CMP, 0x47120000);
+        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_update_flags() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.update_flags(0x2C000000, 0xD2FFFFFF);
+        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_update_flags_with_carry() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.update_flags(0xD9000000, 0xA3FFFFFF);
+        assert!(vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_update_flags_with_overflow() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.update_flags(0x68000000, 0xD2FFFFFF);
+        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && vm.flag.v);
     }
 
     #[test]
     fn test_update_flags_with_negative() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.update_flags(0xB5000000, 0xC4FFFFFF);
+        assert!(!vm.flag.c && !vm.flag.z && vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_update_flags_with_zero() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.update_flags(0x00000000, 0xFFFFFFFF);
+        assert!(!vm.flag.c && vm.flag.z && !vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_form_four_add() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_four_handler(ADD, 0x21120004);
+        assert_eq!(vm.registers[R1 as usize], 0x6);
     }
 
     #[test]
     fn test_form_four_and() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_four_handler(AND, 0x24120003);
+        assert_eq!(vm.registers[R1 as usize], 0x2);
     }
 
     #[test]
     fn test_form_four_eor() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_four_handler(EOR, 0x26120003);
+        assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
     #[test]
     fn test_form_four_mul() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_four_handler(MUL, 0x28120003);
+        assert_eq!(vm.registers[R1 as usize], 0x6);
     }
 
     #[test]
     fn test_form_four_orr() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_four_handler(ORR, 0x25120003);
+        assert_eq!(vm.registers[R1 as usize], 0x3);
     }
 
     #[test]
     fn test_form_four_sub() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x3;
+        vm.form_four_handler(SUB, 0x22120002);
+        assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
     #[test]
     fn test_form_four_ldr() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x1;
+        vm.main_memory[0x2] = 0x1234;
+        vm.form_four_handler(LDR, 0x31120001);
+        assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
     #[test]
     fn test_form_four_str() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R1 as usize] = 0x1234;
+        vm.registers[R2 as usize] = 0x1;
+        vm.form_four_handler(STR, 0x35120001);
+        assert_eq!(vm.main_memory[0x2], 0x1234);
     }
 
     #[test]
     fn test_form_five_mov() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.form_five_handler(MOV, 0x23112345);
+        assert_eq!(vm.registers[R1 as usize], 0x12345);
     }
 
     #[test]
     fn test_form_five_mvn() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.form_five_handler(MVN, 0x27100000);
+        assert_eq!(vm.registers[R1 as usize], 0xFFFFFFFF);
     }
 
     #[test]
     fn test_form_five_ldr() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.set_pc(0x2);
+        vm.main_memory[0x3] = 0x1234;
+        vm.form_five_handler(LDR, 0x33100001);
+        assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
     #[test]
     fn test_form_five_str() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.set_pc(0x2);
+        vm.registers[R1 as usize] = 0x1234;
+        vm.form_five_handler(STR, 0x37100001);
+        assert_eq!(vm.main_memory[0x3], 0x1234);
     }
 
     #[test]
     fn test_form_five_cmp() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.registers[R1 as usize] = 0x1;
+        vm.form_five_handler(CMP, 0x57100000);
+        assert!(vm.flag.c && vm.flag.z && !vm.flag.n && !vm.flag.v);
     }
 
     #[test]
     fn test_exe_bcc() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_beq() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bne() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bhs() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_blo() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bmi() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bpl() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bvs() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bvc() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bhi() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bls() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bge() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_blt() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bgt() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_ble() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_form_six_bal() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.set_pc(0x2);
+        vm.register_variable_reference(Label::Name(String::from("foo")), None);
+        vm.register_variable_declaration(Label::Name(String::from("foo")), Some(0x1234));
+        vm.exe_bcc(true);
+        assert_eq!(vm.get_pc(), 0x1234 - 1);
     }
 
     #[test]
     fn test_execute() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.execute(R1 as Address, Box::new(move || 1 + 2));
+        assert_eq!(vm.registers[R1 as Address], 3);
     }
 
     #[test]
     fn test_register_variable_reference() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.set_pc(0x3);
+        vm.register_variable_reference(Label::Name(String::from("foo")), None);
+        if let Some(label) = vm.variable.reference.get(&vm.get_pc()) {
+            assert_eq!(*label, Label::Name(String::from("foo")));
+        }
+    }
+
+    #[test]
+    fn test_register_variable_reference_with_pc_ptr() {
+        let mut vm = Processor::new();
+        vm.register_variable_reference(Label::Name(String::from("foo")), Some(0x3));
+        if let Some(label) = vm.variable.reference.get(&0x3) {
+            assert_eq!(*label, Label::Name(String::from("foo")));
+        }
     }
 
     #[test]
     fn test_register_variable_declaration() {
-        assert!(false);
+        let mut vm = Processor::new();
+        vm.set_pc(0x3);
+        vm.register_variable_declaration(Label::Name(String::from("foo")), None);
+        if let Some(pc) = vm
+            .variable
+            .declaration
+            .get(&Label::Name(String::from("foo")))
+        {
+            assert_eq!(*pc as usize, vm.get_pc());
+        }
     }
 
     #[test]
-    fn test_load_program() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_run() {
-        assert!(false);
+    fn test_register_variable_declaration_with_pc_ptr() {
+        let mut vm = Processor::new();
+        vm.register_variable_declaration(Label::Name(String::from("foo")), Some(0x3));
+        if let Some(pc) = vm
+            .variable
+            .declaration
+            .get(&Label::Name(String::from("foo")))
+        {
+            assert_eq!(*pc as usize, 0x3);
+        }
     }
 
 }
