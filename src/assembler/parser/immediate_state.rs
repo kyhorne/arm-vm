@@ -1,11 +1,11 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Label, Seperator, Token};
-use super::super::parser::{CloseBrace, ImmediateState, StateMachine};
+use super::super::lexer::{Label, Separator, Token};
+use super::super::parser::{CloseBraceState, ImmediateState, StateMachine};
 
-impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
-    fn from(machine: StateMachine<ImmediateState>) -> StateMachine<CloseBrace> {
+impl From<StateMachine<ImmediateState>> for StateMachine<CloseBraceState> {
+    fn from(machine: StateMachine<ImmediateState>) -> StateMachine<CloseBraceState> {
         StateMachine {
-            state: CloseBrace,
+            state: CloseBraceState,
             tokens: machine.tokens,
             forms: machine.forms,
             label: machine.label,
@@ -16,9 +16,9 @@ impl From<StateMachine<ImmediateState>> for StateMachine<CloseBrace> {
 impl StateMachine<ImmediateState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         match self.tokens.pop() {
-            Some(Token::Seperator(seperator)) => {
-                match seperator {
-                    Seperator::CloseBrace => {
+            Some(Token::Separator(separator)) => {
+                match separator {
+                    Separator::CloseBrace => {
                         // Cannot be form one.
                         if self.forms.contains(&Form::One) {
                             self.forms = vec![Form::Four];
@@ -27,7 +27,7 @@ impl StateMachine<ImmediateState> {
                         if self.forms.contains(&Form::Two) {
                             self.forms = vec![Form::Five];
                         }
-                        return StateMachine::<CloseBrace>::from(self).handler();
+                        return StateMachine::<CloseBraceState>::from(self).handler();
                     }
                     _ => (),
                 }

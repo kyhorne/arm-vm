@@ -1,8 +1,8 @@
 use super::super::super::util::Form;
 use super::super::lexer::Label;
-use super::super::parser::{CloseBrace, StateMachine};
+use super::super::parser::{CloseBraceState, StateMachine};
 
-impl StateMachine<CloseBrace> {
+impl StateMachine<CloseBraceState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         if let None = self.tokens.pop() {
             if self.forms.contains(&Form::One) {

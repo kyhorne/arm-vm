@@ -1,11 +1,11 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Label, Seperator, Token};
-use super::super::parser::{CloseBrace, CommaState, RegisterState, StateMachine};
+use super::super::lexer::{Label, Separator, Token};
+use super::super::parser::{CloseBraceState, CommaState, RegisterState, StateMachine};
 
-impl From<StateMachine<RegisterState>> for StateMachine<CloseBrace> {
-    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CloseBrace> {
+impl From<StateMachine<RegisterState>> for StateMachine<CloseBraceState> {
+    fn from(machine: StateMachine<RegisterState>) -> StateMachine<CloseBraceState> {
         StateMachine {
-            state: CloseBrace,
+            state: CloseBraceState,
             tokens: machine.tokens,
             forms: machine.forms,
             label: machine.label,
@@ -28,9 +28,11 @@ impl StateMachine<RegisterState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         let token = self.tokens.pop();
         match token {
-            Some(Token::Seperator(seperator)) => match seperator {
-                Seperator::Comma => return StateMachine::<CommaState>::from(self).handler(),
-                Seperator::CloseBrace => return StateMachine::<CloseBrace>::from(self).handler(),
+            Some(Token::Separator(separator)) => match separator {
+                Separator::Comma => return StateMachine::<CommaState>::from(self).handler(),
+                Separator::CloseBrace => {
+                    return StateMachine::<CloseBraceState>::from(self).handler();
+                }
                 _ => (),
             },
             None => {

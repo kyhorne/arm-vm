@@ -1,5 +1,5 @@
-use super::super::super::util::{reducer, Form};
-use super::super::lexer::{Label, Token};
+use super::super::super::util::{reducer, Form, Opcode};
+use super::super::lexer::{Label, Separator, Token};
 pub use super::super::parser::StateMachine;
 use super::super::parser::{LabelState, OpcodeState, ReadyState};
 
@@ -37,9 +37,22 @@ impl StateMachine<ReadyState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
-                self.forms = reducer(opcode.get_forms(), opcode, self.tokens.len() + 1);
+                self.forms = reducer(opcode.get_forms(), &opcode, self.tokens.len() + 1);
+                // Ensure there exist a valid form.
                 if self.forms.is_empty() {
                     return Err(());
+                }
+                // If LDR or STR instruction, ensure that expression ends with a close bracket.
+                match opcode {
+                    Opcode::STR | Opcode::LDR => {
+                        if self.forms.contains(&Form::Two) {
+                            match self.tokens.get(0) {
+                                Some(Token::Separator(Separator::CloseBrace)) => (),
+                                _ => return Err(()),
+                            }
+                        }
+                    }
+                    _ => (),
                 }
                 return StateMachine::<OpcodeState>::from(self).handler();
             }

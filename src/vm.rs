@@ -1,4 +1,4 @@
-use super::interpreter::{repl, Label};
+use super::assembler::{repl, Label};
 use super::util::{
     get_dr_addr, get_form_and_bcc, get_form_and_opcode, get_immed16, get_immed20, get_rx_addr,
     get_ry_addr, Form, Opcode,
@@ -406,4 +406,341 @@ impl Processor {
             }
         }
     }
+}
+
+#[cfg(test)]
+mod tests_translator {
+
+    use super::super::util::{Opcode::*, Register::*};
+    use super::*;
+
+    #[test]
+    fn test_set_pc() {
+        let mut vm = Processor::new();
+        vm.set_pc(0x1234);
+        assert_eq!(vm.registers[PC as Address], 0x1234);
+    }
+
+    #[test]
+    fn test_incr_pc() {
+        let mut vm = Processor::new();
+        vm.incr_pc();
+        assert_eq!(vm.registers[PC as Address], 0x1);
+    }
+
+    #[test]
+    fn test_write_to_mm() {
+        let mut vm = Processor::new();
+        vm.write_to_mm(vm.get_pc(), 0x1234);
+        assert_eq!(*vm.read_from_mm(), 0x1234);
+    }
+
+    #[test]
+    fn test_form_one_add() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(ADD, 0x01123000);
+        assert_eq!(vm.registers[R1 as usize], 0x5);
+    }
+
+    #[test]
+    fn test_form_one_and() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(AND, 0x04123000);
+        assert_eq!(vm.registers[R1 as usize], 0x2);
+    }
+
+    #[test]
+    fn test_form_one_eor() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(EOR, 0x06123000);
+        assert_eq!(vm.registers[R1 as usize], 0x1);
+    }
+
+    #[test]
+    fn test_form_one_mul() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(MUL, 0x08123000);
+        assert_eq!(vm.registers[R1 as usize], 0x6);
+    }
+
+    #[test]
+    fn test_form_one_orr() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(ORR, 0x05123000);
+        assert_eq!(vm.registers[R1 as usize], 0x3);
+    }
+
+    #[test]
+    fn test_form_one_sub() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x3;
+        vm.registers[R3 as usize] = 0x2;
+        vm.form_one_handler(SUB, 0x02123000);
+        assert_eq!(vm.registers[R1 as usize], 0x1);
+    }
+
+    #[test]
+    fn test_form_one_ldr() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.main_memory[0x2 + 0x3] = 0x1234;
+        vm.form_one_handler(LDR, 0x32123000);
+        assert_eq!(vm.registers[R1 as usize], 0x1234);
+    }
+
+    #[test]
+    fn test_form_one_str() {
+        let mut vm = Processor::new();
+        vm.registers[R1 as usize] = 0x1234;
+        vm.registers[R2 as usize] = 0x2;
+        vm.registers[R3 as usize] = 0x3;
+        vm.form_one_handler(STR, 0x36123000);
+        assert_eq!(vm.main_memory[0x2 + 0x3], 0x1234);
+    }
+
+    #[test]
+    fn test_form_two_mov() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_two_handler(MOV, 0x03120000);
+        assert_eq!(vm.registers[R1 as usize], 0x2);
+    }
+
+    #[test]
+    fn test_form_two_mvn() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_two_handler(MVN, 0x07120000);
+        assert_eq!(vm.registers[R1 as usize], 0xFFFFFFFD);
+    }
+
+    #[test]
+    fn test_form_two_ldr() {
+        let mut vm = Processor::new();
+        vm.registers[R2 as usize] = 0x2;
+        vm.main_memory[0x2] = 0x1234;
+        vm.form_two_handler(LDR, 0x30120000);
+        assert_eq!(vm.registers[R1 as usize], 0x1234);
+    }
+
+    #[test]
+    fn test_form_two_str() {
+        let mut vm = Processor::new();
+        vm.registers[R1 as usize] = 0x1234;
+        vm.registers[R2 as usize] = 0x2;
+        vm.form_two_handler(STR, 0x34120000);
+        assert_eq!(vm.main_memory[0x2], 0x1234);
+    }
+
+    #[test]
+    fn test_form_two_cmp() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_flags() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_flags_with_carry() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_flags_with_overflow() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_flags_with_negative() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_flags_with_zero() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_add() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_and() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_eor() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_mul() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_orr() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_sub() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_ldr() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_four_str() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_five_mov() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_five_mvn() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_five_ldr() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_five_str() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_five_cmp() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_exe_bcc() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_beq() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bne() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bhs() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_blo() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bmi() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bpl() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bvs() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bvc() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bhi() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bls() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bge() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_blt() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bgt() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_ble() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_form_six_bal() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_execute() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_register_variable_reference() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_register_variable_declaration() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_load_program() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_run() {
+        assert!(false);
+    }
+
 }

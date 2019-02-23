@@ -7,7 +7,8 @@ impl Literal {
             Literal::Immediate(immed) => {
                 let mut is_valid = immed.starts_with("#");
                 immed.remove(0); // Remove prefix.
-                                 // Ensure value is parable to u32.
+                let immed = immed.trim_start_matches("0x");
+                // Ensure value is parable to u32.
                 if let Err(_) = immed.parse::<u32>() {
                     is_valid = false
                 }
@@ -31,7 +32,7 @@ impl Literal {
 }
 
 #[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
-pub enum Seperator {
+pub enum Separator {
     #[strum(serialize = ",")]
     Comma,
     #[strum(serialize = "[")]
@@ -59,11 +60,45 @@ pub enum Label {
 }
 
 #[derive(Clone, Debug, PartialEq, ToString)]
-/// Parsable tokens.
 pub enum Token {
     Opcode(Opcode),
     Register(Register),
     Literal(Literal),
-    Seperator(Seperator),
+    Separator(Separator),
     Label(Label),
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_is_valid_with_base_10() {
+        assert!(Literal::Immediate(String::from("#1234")).is_valid())
+    }
+
+    #[test]
+    fn test_is_valid_with_base_16() {
+        assert!(Literal::Immediate(String::from("#0x1234")).is_valid())
+    }
+
+    #[test]
+    fn test_is_valid_out_of_bounds() {
+        assert!(!Literal::Immediate(String::from("#0x1FFFFFFFF")).is_valid())
+    }
+
+    #[test]
+    fn test_get_value_with_base_10() {
+        assert_eq!(Literal::Immediate(String::from("1234")).get_value(), 1234)
+    }
+
+    #[test]
+    fn test_get_value_with_base_16() {
+        assert_eq!(
+            Literal::Immediate(String::from("0x1234")).get_value(),
+            0x1234
+        )
+    }
+
 }

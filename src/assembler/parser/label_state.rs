@@ -18,7 +18,7 @@ impl StateMachine<LabelState> {
     pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
-                self.forms = reducer(opcode.get_forms(), opcode, self.tokens.len() + 1);
+                self.forms = reducer(opcode.get_forms(), &opcode, self.tokens.len() + 1);
                 if self.forms.is_empty() {
                     return Err(());
                 }

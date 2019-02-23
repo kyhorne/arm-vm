@@ -44,3 +44,15 @@ pub fn get_name(addr: usize) -> String {
     let register: Register = unsafe { transmute(addr as u8) };
     register.as_static().to_uppercase()
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_get_name() {
+        assert_eq!(get_name(0xF), String::from("PC"))
+    }
+
+}

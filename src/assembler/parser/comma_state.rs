@@ -1,7 +1,9 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Label, Seperator, Token};
+use super::super::lexer::{Label, Separator, Token};
 
-use super::super::parser::{CommaState, ImmediateState, OpenBrace, RegisterState, StateMachine};
+use super::super::parser::{
+    CommaState, ImmediateState, OpenBraceState, RegisterState, StateMachine,
+};
 
 impl From<StateMachine<CommaState>> for StateMachine<ImmediateState> {
     fn from(machine: StateMachine<CommaState>) -> StateMachine<ImmediateState> {
@@ -25,10 +27,10 @@ impl From<StateMachine<CommaState>> for StateMachine<RegisterState> {
     }
 }
 
-impl From<StateMachine<CommaState>> for StateMachine<OpenBrace> {
-    fn from(machine: StateMachine<CommaState>) -> StateMachine<OpenBrace> {
+impl From<StateMachine<CommaState>> for StateMachine<OpenBraceState> {
+    fn from(machine: StateMachine<CommaState>) -> StateMachine<OpenBraceState> {
         StateMachine {
-            state: OpenBrace,
+            state: OpenBraceState,
             tokens: machine.tokens,
             forms: machine.forms,
             label: machine.label,
@@ -45,13 +47,12 @@ impl StateMachine<CommaState> {
                 if (self.forms.contains(&Form::Four) && 0xFFFF < immed)
                     || (self.forms.contains(&Form::Five) && 0xFFFFF < immed)
                 {
-                    println!("dsada {:?}", 0xFFFFF < immed);
                     return Err(());
                 }
                 return StateMachine::<ImmediateState>::from(self).handler();
             }
-            Some(Token::Seperator(seperator)) => match seperator {
-                Seperator::OpenBrace => return StateMachine::<OpenBrace>::from(self).handler(),
+            Some(Token::Separator(separator)) => match separator {
+                Separator::OpenBrace => return StateMachine::<OpenBraceState>::from(self).handler(),
                 _ => (),
             },
             _ => (),
