@@ -189,7 +189,7 @@ impl Processor {
     }
     fn update_flags(&mut self, op1: u32, op2: u32) {
         // Update carry flag.
-        if let Some(result) = op1.checked_add(!op2) {
+        if let Some(result) = op1.checked_sub(op2) {
             self.flag.c = false;
             // Update zero flag.
             if result == 0 {
@@ -205,7 +205,7 @@ impl Processor {
         let op1 = op1 as i32;
         let op2 = op2 as i32;
         // Check oVerflow flag.
-        if let Some(result) = op1.checked_add(!op2) {
+        if let Some(result) = op1.checked_sub(op2) {
             self.flag.v = false;
             // Update zero flag.
             if result == 0 {
