@@ -41,7 +41,7 @@ pub fn run(tokens: &mut Vec<Token>) -> Result<Option<Form>, ()> {
 mod tests_basic_form_one {
 
     use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -67,43 +67,8 @@ mod tests_basic_form_one {
             Separator(Comma),
             Register(R0),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, One);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(ADD),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(ADD),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -115,7 +80,7 @@ mod tests_basic_form_one {
 mod tests_ldr_str_form_one {
 
     use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -145,47 +110,8 @@ mod tests_ldr_str_form_one {
             Register(R0),
             Separator(CloseBrace),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, One);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -197,7 +123,7 @@ mod tests_ldr_str_form_one {
 mod tests_basic_form_two {
 
     use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -209,34 +135,8 @@ mod tests_basic_form_two {
     #[test]
     fn test_form() {
         let mut tokens = vec![Opcode(MOV), Register(R0), Separator(Comma), Register(R0)];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Two);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![Opcode(MOV), Register(R0), Separator(Comma), Register(R0)];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(MOV),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -248,7 +148,7 @@ mod tests_basic_form_two {
 mod tests_ldr_str_form_two {
 
     use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -274,43 +174,8 @@ mod tests_ldr_str_form_two {
             Register(R0),
             Separator(CloseBrace),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Two);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -322,7 +187,7 @@ mod tests_ldr_str_form_two {
 mod tests_basic_form_four {
 
     use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -387,43 +252,8 @@ mod tests_basic_form_four {
             Separator(Comma),
             Literal(Immediate(String::from("0x1234"))),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Four);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(ADD),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(ADD),
-            Register(R0),
-            Separator(Comma),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -435,7 +265,7 @@ mod tests_basic_form_four {
 mod tests_ldr_str_form_four {
 
     use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -465,47 +295,8 @@ mod tests_ldr_str_form_four {
             Literal(Immediate(String::from("0x1234"))),
             Separator(CloseBrace),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Four);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -517,7 +308,7 @@ mod tests_ldr_str_form_four {
 mod tests_basic_form_five {
 
     use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -572,39 +363,8 @@ mod tests_basic_form_five {
             Separator(Comma),
             Literal(Immediate(String::from("0x1234"))),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Five);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(MOV),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(MOV),
-            Register(R0),
-            Separator(Comma),
-            Literal(Immediate(String::from("0x1234"))),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
         } else {
             assert!(false);
         }
@@ -616,7 +376,7 @@ mod tests_basic_form_five {
 mod tests_ldr_str_form_five {
 
     use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Separator::*, Token::*};
+    use super::super::lexer::{Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -642,76 +402,8 @@ mod tests_ldr_str_form_five {
             Literal(Immediate(String::from("0x1234"))),
             Separator(CloseBrace),
         ];
-        if let Ok((Some(form), _)) = run(&mut tokens) {
+        if let Ok(Some(form)) = run(&mut tokens) {
             assert_eq!(form, Five);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_without_label() {
-        let mut tokens = vec![
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Literal(Immediate(String::from("0x1234"))),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, None)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_with_label() {
-        let mut tokens = vec![
-            Label(Name(String::from("foo"))),
-            Opcode(STR),
-            Register(R0),
-            Separator(Comma),
-            Separator(OpenBrace),
-            Literal(Immediate(String::from("0x1234"))),
-            Separator(CloseBrace),
-        ];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Name(String::from("foo")));
-        } else {
-            assert!(false);
-        }
-    }
-
-}
-
-#[cfg(test)]
-mod tests_form_six {
-
-    use super::*;
-
-    #[test]
-    fn test_is_ok() {
-        let mut tokens = vec![Token::Label(Label::Name(String::from("foo")))];
-        assert!(run(&mut tokens).is_ok());
-    }
-
-    #[test]
-    fn test_form() {
-        let mut tokens = vec![Token::Label(Label::Name(String::from("foo")))];
-        if let Ok((None, _)) = run(&mut tokens) {
-            assert!(true);
-        } else {
-            assert!(false);
-        }
-    }
-
-    #[test]
-    fn test_label() {
-        let mut tokens = vec![Token::Label(Label::Name(String::from("foo")))];
-        if let Ok((_, Some(label))) = run(&mut tokens) {
-            assert_eq!(label, Label::Name(String::from("foo")));
         } else {
             assert!(false);
         }

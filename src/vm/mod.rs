@@ -231,35 +231,27 @@ impl Processor {
             _ => (),
         }
     }
-    fn exe_bcc(&mut self, cond: bool, mut decoder: EncoderDecoder) {
+    fn form_six_handler(&mut self, mut decoder: EncoderDecoder) {
+        let cond;
+        match decoder.get_cc() {
+            AL => cond = true,
+            EQ => cond = self.flag.get_z(),
+            NE => cond = !self.flag.get_z(),
+            HS => cond = self.flag.get_c(),
+            LO => cond = !self.flag.get_c(),
+            MI => cond = self.flag.get_n(),
+            PL => cond = !self.flag.get_n(),
+            VS => cond = self.flag.get_v(),
+            VC => cond = !self.flag.get_v(),
+            HI => cond = self.flag.get_c() && !self.flag.get_z(),
+            LS => cond = !self.flag.get_c() || self.flag.get_z(),
+            GE => cond = self.flag.get_n() == self.flag.get_v(),
+            LT => cond = self.flag.get_n() != self.flag.get_v(),
+            GT => cond = !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
+            LE => cond = self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
+        }
         if cond {
             self.set_pc(decoder.get_immed20() - 1)
-        }
-    }
-    fn form_six_handler(&mut self, mut decoder: EncoderDecoder) {
-        let cond_code = decoder.get_cc();
-        match cond_code {
-            AL => self.exe_bcc(true, decoder),
-            EQ => self.exe_bcc(self.flag.get_z(), decoder),
-            NE => self.exe_bcc(!self.flag.get_z(), decoder),
-            HS => self.exe_bcc(self.flag.get_c(), decoder),
-            LO => self.exe_bcc(!self.flag.get_c(), decoder),
-            MI => self.exe_bcc(self.flag.get_n(), decoder),
-            PL => self.exe_bcc(!self.flag.get_n(), decoder),
-            VS => self.exe_bcc(self.flag.get_v(), decoder),
-            VC => self.exe_bcc(!self.flag.get_v(), decoder),
-            HI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z(), decoder),
-            LS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z(), decoder),
-            GE => self.exe_bcc(self.flag.get_n() == self.flag.get_v(), decoder),
-            LT => self.exe_bcc(self.flag.get_n() != self.flag.get_v(), decoder),
-            GT => self.exe_bcc(
-                !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
-                decoder,
-            ),
-            LE => self.exe_bcc(
-                self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
-                decoder,
-            ),
         }
     }
     /// Execute instruction and save the result to the destination register.
@@ -318,7 +310,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(ADD, 0x01123000);
+        let decoder = EncoderDecoder::new(Some(0x01123000));
+        vm.form_one_handler(ADD, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x5);
     }
 
@@ -327,7 +320,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(AND, 0x04123000);
+        let decoder = EncoderDecoder::new(Some(0x04123000));
+        vm.form_one_handler(AND, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x2);
     }
 
@@ -336,7 +330,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(EOR, 0x06123000);
+        let decoder = EncoderDecoder::new(Some(0x06123000));
+        vm.form_one_handler(EOR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
@@ -345,7 +340,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(MUL, 0x08123000);
+        let decoder = EncoderDecoder::new(Some(0x08123000));
+        vm.form_one_handler(MUL, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x6);
     }
 
@@ -354,7 +350,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(ORR, 0x05123000);
+        let decoder = EncoderDecoder::new(Some(0x05123000));
+        vm.form_one_handler(ORR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x3);
     }
 
@@ -363,7 +360,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x3;
         vm.registers[R3 as usize] = 0x2;
-        vm.form_one_handler(SUB, 0x02123000);
+        let decoder = EncoderDecoder::new(Some(0x02123000));
+        vm.form_one_handler(SUB, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
@@ -373,7 +371,8 @@ mod tests_translator {
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
         vm.main_memory[0x2 + 0x3] = 0x1234;
-        vm.form_one_handler(LDR, 0x32123000);
+        let decoder = EncoderDecoder::new(Some(0x32123000));
+        vm.form_one_handler(LDR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
@@ -383,7 +382,8 @@ mod tests_translator {
         vm.registers[R1 as usize] = 0x1234;
         vm.registers[R2 as usize] = 0x2;
         vm.registers[R3 as usize] = 0x3;
-        vm.form_one_handler(STR, 0x36123000);
+        let decoder = EncoderDecoder::new(Some(0x36123000));
+        vm.form_one_handler(STR, decoder);
         assert_eq!(vm.main_memory[0x2 + 0x3], 0x1234);
     }
 
@@ -391,7 +391,8 @@ mod tests_translator {
     fn test_form_two_mov() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_two_handler(MOV, 0x03120000);
+        let decoder = EncoderDecoder::new(Some(0x03120000));
+        vm.form_two_handler(MOV, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x2);
     }
 
@@ -399,7 +400,8 @@ mod tests_translator {
     fn test_form_two_mvn() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_two_handler(MVN, 0x07120000);
+        let decoder = EncoderDecoder::new(Some(0x07120000));
+        vm.form_two_handler(MVN, decoder);
         assert_eq!(vm.registers[R1 as usize], 0xFFFFFFFD);
     }
 
@@ -408,7 +410,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
         vm.main_memory[0x2] = 0x1234;
-        vm.form_two_handler(LDR, 0x30120000);
+        let decoder = EncoderDecoder::new(Some(0x30120000));
+        vm.form_two_handler(LDR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
@@ -417,7 +420,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R1 as usize] = 0x1234;
         vm.registers[R2 as usize] = 0x2;
-        vm.form_two_handler(STR, 0x34120000);
+        let decoder = EncoderDecoder::new(Some(0x34120000));
+        vm.form_two_handler(STR, decoder);
         assert_eq!(vm.main_memory[0x2], 0x1234);
     }
 
@@ -426,50 +430,17 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R1 as usize] = 0x2C000000;
         vm.registers[R2 as usize] = 0xD2FFFFFF;
-        vm.form_two_handler(CMP, 0x47120000);
-        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
-    }
-
-    #[test]
-    fn test_update_flags() {
-        let mut vm = Processor::new();
-        vm.update_flags(0x2C000000, 0xD2FFFFFF);
-        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
-    }
-
-    #[test]
-    fn test_update_flags_with_carry() {
-        let mut vm = Processor::new();
-        vm.update_flags(0xD9000000, 0xA3FFFFFF);
-        assert!(vm.flag.c && !vm.flag.z && !vm.flag.n && !vm.flag.v);
-    }
-
-    #[test]
-    fn test_update_flags_with_overflow() {
-        let mut vm = Processor::new();
-        vm.update_flags(0x68000000, 0xD2FFFFFF);
-        assert!(!vm.flag.c && !vm.flag.z && !vm.flag.n && vm.flag.v);
-    }
-
-    #[test]
-    fn test_update_flags_with_negative() {
-        let mut vm = Processor::new();
-        vm.update_flags(0xB5000000, 0xC4FFFFFF);
-        assert!(!vm.flag.c && !vm.flag.z && vm.flag.n && !vm.flag.v);
-    }
-
-    #[test]
-    fn test_update_flags_with_zero() {
-        let mut vm = Processor::new();
-        vm.update_flags(0x00000000, 0xFFFFFFFF);
-        assert!(!vm.flag.c && vm.flag.z && !vm.flag.n && !vm.flag.v);
+        let decoder = EncoderDecoder::new(Some(0x47120000));
+        vm.form_two_handler(CMP, decoder);
+        assert!(!vm.flag.get_c() && !vm.flag.get_z() && !vm.flag.get_n() && !vm.flag.get_v());
     }
 
     #[test]
     fn test_form_four_add() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_four_handler(ADD, 0x21120004);
+        let decoder = EncoderDecoder::new(Some(0x21120004));
+        vm.form_four_handler(ADD, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x6);
     }
 
@@ -477,7 +448,8 @@ mod tests_translator {
     fn test_form_four_and() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_four_handler(AND, 0x24120003);
+        let decoder = EncoderDecoder::new(Some(0x24120003));
+        vm.form_four_handler(AND, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x2);
     }
 
@@ -485,7 +457,8 @@ mod tests_translator {
     fn test_form_four_eor() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_four_handler(EOR, 0x26120003);
+        let decoder = EncoderDecoder::new(Some(0x26120003));
+        vm.form_four_handler(EOR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
@@ -493,7 +466,8 @@ mod tests_translator {
     fn test_form_four_mul() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_four_handler(MUL, 0x28120003);
+        let decoder = EncoderDecoder::new(Some(0x28120003));
+        vm.form_four_handler(MUL, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x6);
     }
 
@@ -501,7 +475,8 @@ mod tests_translator {
     fn test_form_four_orr() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
-        vm.form_four_handler(ORR, 0x25120003);
+        let decoder = EncoderDecoder::new(Some(0x25120003));
+        vm.form_four_handler(ORR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x3);
     }
 
@@ -509,7 +484,8 @@ mod tests_translator {
     fn test_form_four_sub() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x3;
-        vm.form_four_handler(SUB, 0x22120002);
+        let decoder = EncoderDecoder::new(Some(0x22120002));
+        vm.form_four_handler(SUB, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1);
     }
 
@@ -518,7 +494,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x1;
         vm.main_memory[0x2] = 0x1234;
-        vm.form_four_handler(LDR, 0x31120001);
+        let decoder = EncoderDecoder::new(Some(0x31120001));
+        vm.form_four_handler(LDR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
@@ -527,21 +504,24 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.registers[R1 as usize] = 0x1234;
         vm.registers[R2 as usize] = 0x1;
-        vm.form_four_handler(STR, 0x35120001);
+        let decoder = EncoderDecoder::new(Some(0x35120001));
+        vm.form_four_handler(STR, decoder);
         assert_eq!(vm.main_memory[0x2], 0x1234);
     }
 
     #[test]
     fn test_form_five_mov() {
         let mut vm = Processor::new();
-        vm.form_five_handler(MOV, 0x23112345);
+        let decoder = EncoderDecoder::new(Some(0x23112345));
+        vm.form_five_handler(MOV, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x12345);
     }
 
     #[test]
     fn test_form_five_mvn() {
         let mut vm = Processor::new();
-        vm.form_five_handler(MVN, 0x27100000);
+        let decoder = EncoderDecoder::new(Some(0x27100000));
+        vm.form_five_handler(MVN, decoder);
         assert_eq!(vm.registers[R1 as usize], 0xFFFFFFFF);
     }
 
@@ -550,7 +530,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.set_pc(0x2);
         vm.main_memory[0x3] = 0x1234;
-        vm.form_five_handler(LDR, 0x33100001);
+        let decoder = EncoderDecoder::new(Some(0x33100001));
+        vm.form_five_handler(LDR, decoder);
         assert_eq!(vm.registers[R1 as usize], 0x1234);
     }
 
@@ -559,7 +540,8 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.set_pc(0x2);
         vm.registers[R1 as usize] = 0x1234;
-        vm.form_five_handler(STR, 0x37100001);
+        let decoder = EncoderDecoder::new(Some(0x37100001));
+        vm.form_five_handler(STR, decoder);
         assert_eq!(vm.main_memory[0x3], 0x1234);
     }
 
@@ -567,18 +549,9 @@ mod tests_translator {
     fn test_form_five_cmp() {
         let mut vm = Processor::new();
         vm.registers[R1 as usize] = 0x1;
-        vm.form_five_handler(CMP, 0x57100000);
-        assert!(vm.flag.c && vm.flag.z && !vm.flag.n && !vm.flag.v);
-    }
-
-    #[test]
-    fn test_exe_bcc() {
-        let mut vm = Processor::new();
-        vm.set_pc(0x2);
-        vm.register_variable_reference(Label::Name(String::from("foo")), None);
-        vm.register_variable_declaration(Label::Name(String::from("foo")), Some(0x1234));
-        vm.exe_bcc(true);
-        assert_eq!(vm.get_pc(), 0x1234 - 1);
+        let decoder = EncoderDecoder::new(Some(0x57100000));
+        vm.form_five_handler(CMP, decoder);
+        assert!(vm.flag.get_c() && vm.flag.get_z() && !vm.flag.get_n() && !vm.flag.get_v());
     }
 
     #[test]
@@ -586,52 +559,6 @@ mod tests_translator {
         let mut vm = Processor::new();
         vm.execute(R1 as Address, Box::new(move || 1 + 2));
         assert_eq!(vm.registers[R1 as Address], 3);
-    }
-
-    #[test]
-    fn test_register_variable_reference() {
-        let mut vm = Processor::new();
-        vm.set_pc(0x3);
-        vm.register_variable_reference(Label::Name(String::from("foo")), None);
-        if let Some(label) = vm.variable.reference.get(&vm.get_pc()) {
-            assert_eq!(*label, Label::Name(String::from("foo")));
-        }
-    }
-
-    #[test]
-    fn test_register_variable_reference_with_pc_ptr() {
-        let mut vm = Processor::new();
-        vm.register_variable_reference(Label::Name(String::from("foo")), Some(0x3));
-        if let Some(label) = vm.variable.reference.get(&0x3) {
-            assert_eq!(*label, Label::Name(String::from("foo")));
-        }
-    }
-
-    #[test]
-    fn test_register_variable_declaration() {
-        let mut vm = Processor::new();
-        vm.set_pc(0x3);
-        vm.register_variable_declaration(Label::Name(String::from("foo")), None);
-        if let Some(pc) = vm
-            .variable
-            .declaration
-            .get(&Label::Name(String::from("foo")))
-        {
-            assert_eq!(*pc as usize, vm.get_pc());
-        }
-    }
-
-    #[test]
-    fn test_register_variable_declaration_with_pc_ptr() {
-        let mut vm = Processor::new();
-        vm.register_variable_declaration(Label::Name(String::from("foo")), Some(0x3));
-        if let Some(pc) = vm
-            .variable
-            .declaration
-            .get(&Label::Name(String::from("foo")))
-        {
-            assert_eq!(*pc as usize, 0x3);
-        }
     }
 
 }
