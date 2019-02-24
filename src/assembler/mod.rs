@@ -97,7 +97,9 @@ impl Assembler {
                     }
                     optimized_tokens.push(token.clone());
                 }
-                Opcode(_) | Register(_) | Literal(_) => optimized_tokens.push(token.clone()),
+                ConditionCode(_) | Opcode(_) | Register(_) | Literal(_) => {
+                    optimized_tokens.push(token.clone())
+                }
                 _ => (),
             }
         }
@@ -129,13 +131,8 @@ impl Assembler {
                     }
                     _ => (),
                 },
-                Opcode(opcode) => {
-                    if opcode.is_bcc() {
-                        encoder.set_bcc(expr.form, opcode.clone());
-                    } else {
-                        encoder.set_opcode(expr.form, opcode.clone());
-                    }
-                }
+                Opcode(opcode) => encoder.set_opcode(expr.form, opcode.clone()),
+                ConditionCode(cond_code) => encoder.set_cc(cond_code.clone()),
                 Register(register) => match next_encoded_register.clone() {
                     RegisterType::Dr => {
                         encoder.set_dr(register.clone());

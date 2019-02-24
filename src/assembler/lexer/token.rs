@@ -1,4 +1,4 @@
-use super::super::super::util::{Literal, Opcode, Register};
+use super::super::super::util::{ConditionCode, Literal, Opcode, Register};
 
 #[derive(Clone, EnumString, Eq, Debug, PartialEq, ToString)]
 pub enum Separator {
@@ -25,6 +25,7 @@ pub enum Label {
 #[derive(Clone, Debug, PartialEq, ToString)]
 pub enum Token {
     Opcode(Opcode),
+    ConditionCode(ConditionCode),
     Register(Register),
     Literal(Literal),
     Separator(Separator),

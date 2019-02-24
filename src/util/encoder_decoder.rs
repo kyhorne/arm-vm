@@ -1,7 +1,5 @@
-use super::Literal;
-use super::Register;
-use crate::util::opcode::Form;
-use crate::util::opcode::Opcode;
+use super::{ConditionCode, Literal, Register};
+use crate::util::opcode::*;
 use crate::vm::Address;
 
 /// Mask defines the bits used to access specific data from an instruction.
@@ -12,8 +10,8 @@ pub type Offset = u8;
 
 /// Payload list the types of information encoded into an instruction.
 pub enum Payload {
-    Opcode, /* The opcode bits define the type of operation to execute. */
-    Bcc,
+    Opcode,  /* The opcode bits define the type of operation to execute. */
+    CC,      /* The condition code. */
     DR,      /* The address of the destination register. */
     RX,      /* The address of the register for the first operand. */
     RY,      /* The address of the register for the second operand. */
@@ -27,7 +25,7 @@ impl Payload {
         match self {
             /* The opcode is encoded in the two most significant bytes. */
             Payload::Opcode => (0xFF000000, 0x18),
-            Payload::Bcc => (0xFFF00000, 0x14),
+            Payload::CC => (0x00F00000, 0x14),
             /* The address of the destination register is encoded in the third most significant
              * byte. */
             Payload::DR => (0x00F00000, 0x14),
@@ -73,11 +71,9 @@ impl EncoderDecoder {
         }
     }
     /// Encode the condition code.
-    pub fn set_bcc(&mut self, form: Form, opcode: Opcode) {
-        let (_, bcc_offset) = Payload::Bcc.get_mask_and_offset();
-        if let Some(bytecode) = opcode.get_bytecode().get(&form) {
-            self.instr |= bytecode << bcc_offset
-        }
+    pub fn set_cc(&mut self, cond_code: ConditionCode) {
+        let (_, cc_offset) = Payload::CC.get_mask_and_offset();
+        self.instr |= (cond_code as Mask) << cc_offset
     }
     /// Encode the destination register.
     pub fn set_dr(&mut self, register: Register) {
@@ -111,16 +107,15 @@ impl EncoderDecoder {
         Opcode::get_opcode(bytecode)
     }
     // TODO: Explanation.
-    pub fn get_form_and_bcc(&mut self) -> Result<((Form, Opcode)), ()> {
-        let (opcode_mask, opcode_offset) = Payload::Bcc.get_mask_and_offset();
-        let bytecode = ((self.instr & opcode_mask) >> opcode_offset) as u32;
-        Opcode::get_opcode(bytecode)
+    pub fn get_cc(&mut self) -> ConditionCode {
+        let (opcode_mask, opcode_offset) = Payload::CC.get_mask_and_offset();
+        let cc = ((self.instr & opcode_mask) >> opcode_offset) as usize;
+        ConditionCode::get_cc(cc)
     }
     // Parse the address of the destination register from an instruction.
     pub fn get_dr(&mut self) -> Address {
         let (dr_mask, dr_offset) = Payload::DR.get_mask_and_offset();
-        let dr_addr = ((self.instr & dr_mask) >> dr_offset) as Address;
-        dr_addr
+        ((self.instr & dr_mask) >> dr_offset) as Address
     }
     // Parse the address of register x from an instruction.
     pub fn get_rx(&mut self) -> Address {
@@ -146,61 +141,4 @@ impl EncoderDecoder {
         println!("{:30}{:#010X}", "Immed20: ", immed20);
         immed20
     }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
-    use super::*;
-
-    #[test]
-    fn test_set_opcode() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_opcode(One, ADD);
-        assert_eq!(translator.get_instr(), 0x01000000);
-    }
-
-    #[test]
-    fn test_set_bcc() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_bcc(Six, BEQ);
-        assert_eq!(translator.get_instr(), 0x80100000);
-    }
-
-    #[test]
-    fn test_set_dr() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_dr(PC);
-        assert_eq!(translator.get_instr(), 0x00F00000);
-    }
-
-    #[test]
-    fn test_set_rx() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_rx(PC);
-        assert_eq!(translator.get_instr(), 0x000F0000);
-    }
-
-    #[test]
-    fn test_set_ry() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_ry(PC);
-        assert_eq!(translator.get_instr(), 0x0000F000);
-    }
-
-    #[test]
-    fn test_set_immed16() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_immed16(Immediate(String::from("0x1234")));
-        assert_eq!(translator.get_instr(), 0x00001234);
-    }
-
-    #[test]
-    fn test_set_immed20() {
-        let mut translator = EncoderDecoder::new(None);
-        translator.set_immed20(Immediate(String::from("0x12345")));
-        assert_eq!(translator.get_instr(), 0x00012345);
-    }
-
 }

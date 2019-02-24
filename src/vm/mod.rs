@@ -1,6 +1,8 @@
 mod flag;
 
-use super::util::{get_name, EncoderDecoder, Form, Instruction, Opcode, Register};
+use super::util::{
+    get_name, ConditionCode::*, EncoderDecoder, Form, Instruction, Opcode, Register,
+};
 use flag::*;
 
 /// The initial value of all registers in the processor.
@@ -68,14 +70,7 @@ impl Processor {
                 Form::Two => self.form_two_handler(opcode, decoder),
                 Form::Four => self.form_four_handler(opcode, decoder),
                 Form::Five => self.form_five_handler(opcode, decoder),
-                _ => (),
-            }
-        } else if let Ok((form, opcode)) = decoder.get_form_and_bcc() {
-            println!("{:24}{:?}", "Opcode:", opcode);
-            // Execute the handler based on instruction form.
-            match form {
-                Form::Six => self.form_six_handler(opcode, decoder),
-                _ => (),
+                Form::Six => self.form_six_handler(decoder),
             }
         }
     }
@@ -241,31 +236,30 @@ impl Processor {
             self.set_pc(decoder.get_immed20() - 1)
         }
     }
-
-    fn form_six_handler(&mut self, opcode: Opcode, decoder: EncoderDecoder) {
-        match opcode {
-            Opcode::BEQ => self.exe_bcc(self.flag.get_z(), decoder),
-            Opcode::BNE => self.exe_bcc(!self.flag.get_z(), decoder),
-            Opcode::BHS => self.exe_bcc(self.flag.get_c(), decoder),
-            Opcode::BLO => self.exe_bcc(!self.flag.get_c(), decoder),
-            Opcode::BMI => self.exe_bcc(self.flag.get_n(), decoder),
-            Opcode::BPL => self.exe_bcc(!self.flag.get_n(), decoder),
-            Opcode::BVS => self.exe_bcc(self.flag.get_v(), decoder),
-            Opcode::BVC => self.exe_bcc(!self.flag.get_v(), decoder),
-            Opcode::BHI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z(), decoder),
-            Opcode::BLS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z(), decoder),
-            Opcode::BGE => self.exe_bcc(self.flag.get_n() == self.flag.get_v(), decoder),
-            Opcode::BLT => self.exe_bcc(self.flag.get_n() != self.flag.get_v(), decoder),
-            Opcode::BGT => self.exe_bcc(
+    fn form_six_handler(&mut self, mut decoder: EncoderDecoder) {
+        let cond_code = decoder.get_cc();
+        match cond_code {
+            AL => self.exe_bcc(true, decoder),
+            EQ => self.exe_bcc(self.flag.get_z(), decoder),
+            NE => self.exe_bcc(!self.flag.get_z(), decoder),
+            HS => self.exe_bcc(self.flag.get_c(), decoder),
+            LO => self.exe_bcc(!self.flag.get_c(), decoder),
+            MI => self.exe_bcc(self.flag.get_n(), decoder),
+            PL => self.exe_bcc(!self.flag.get_n(), decoder),
+            VS => self.exe_bcc(self.flag.get_v(), decoder),
+            VC => self.exe_bcc(!self.flag.get_v(), decoder),
+            HI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z(), decoder),
+            LS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z(), decoder),
+            GE => self.exe_bcc(self.flag.get_n() == self.flag.get_v(), decoder),
+            LT => self.exe_bcc(self.flag.get_n() != self.flag.get_v(), decoder),
+            GT => self.exe_bcc(
                 !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
                 decoder,
             ),
-            Opcode::BLE => self.exe_bcc(
+            LE => self.exe_bcc(
                 self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
                 decoder,
             ),
-            Opcode::B => self.exe_bcc(true, decoder),
-            _ => (),
         }
     }
     /// Execute instruction and save the result to the destination register.

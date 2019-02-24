@@ -1,5 +1,6 @@
 mod close_brace_state;
 mod comma_state;
+mod cond_code_state;
 mod immediate_state;
 mod label_state;
 mod opcode_state;
@@ -13,6 +14,7 @@ use super::lexer::Token;
 /// The syntax is analyzed using a finite state machine.
 struct CloseBraceState;
 struct CommaState;
+struct ConditionCodeState;
 struct ImmediateState;
 struct OpcodeState;
 struct OpenBraceState;
