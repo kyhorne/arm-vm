@@ -32,7 +32,7 @@ fn main() {
         )
         .get_matches();
     if matches.is_present("repl") {
-        // vm::Processor::new().repl();
+        vm::Processor::new().repl();
     }
     if matches.is_present("read") {
         let program = assembler::Assembler::new().read_file();

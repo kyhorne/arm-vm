@@ -7,7 +7,7 @@ use super::util::{EncoderDecoder, Form, Instruction, Literal::*};
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{stdin, stdout, BufRead, BufReader, Write};
 
 struct LabelRegistry {
     // The index of the current instruction being assembled which is used as a pointer for variable
@@ -83,6 +83,25 @@ impl Assembler {
             self.registry.incr_instr_ptr();
         }
         program
+    }
+    /// Read and evaluate the bufed message from standard input.
+    pub fn read_eval(&mut self) -> Result<Instruction, ()> {
+        print!(">>> ");
+        let _ = stdout().flush();
+        let mut buf = String::new();
+        buf.pop(); // Remove the trailing new line.
+        stdin().read_line(&mut buf).unwrap();
+        // Convert buffer into meaningful lexemes.
+        let mut tokens = lexer(buf);
+        // Parse tokens returned from the lexer.
+        if let Ok(form) = parser::run(&mut tokens) {
+            self.optimized_tokens(&mut tokens, form);
+            let expr = self.program.pop().unwrap();
+            return Ok(self.get_bytecode(expr));
+        } else {
+            println!("Invalid syntax!")
+        }
+        return Err(());
     }
     /// Remove tokens that are irrelevant to byte code encoding and register all labels in label
     /// registry if it is not a Form Six expression.
