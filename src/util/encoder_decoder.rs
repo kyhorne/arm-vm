@@ -149,7 +149,7 @@ impl EncoderDecoder {
 }
 
 #[cfg(test)]
-mod tests_translator {
+mod tests {
 
     use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
     use super::*;

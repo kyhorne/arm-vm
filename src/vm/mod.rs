@@ -1,9 +1,7 @@
 mod flag;
 
-use super::assembler::{repl, Label};
-use super::util::{get_name, EncoderDecoder, Form, Opcode, Register};
+use super::util::{get_name, EncoderDecoder, Form, Instruction, Opcode, Register};
 use flag::*;
-use std::collections::HashMap;
 
 /// The initial value of all registers in the processor.
 pub const INIT_REGISTER_VALUE: Payload = 0;
@@ -16,18 +14,10 @@ const N_REGISTERS_IN_PROCESSOR: Address = 16;
 /// memory locations.
 const N_REGISTERS_IN_MAIN_MEMORY: Address = std::u32::MAX as usize;
 
-struct Variable {
-    /// Defines the label as a location (address) in a program;
-    declaration: HashMap<Label, u32>,
-    /// Label is interpreted by the assembler as identifying the target address.
-    reference: HashMap<Address, Label>,
-}
-
 /// A virtual processor has virtual registers and memory.
 pub struct Processor {
     registers: Vec<u32>,
     main_memory: Vec<u32>,
-    variable: Variable,
     flag: Flag,
 }
 
@@ -40,10 +30,6 @@ impl Processor {
         Processor {
             registers: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_PROCESSOR],
             main_memory: vec![INIT_REGISTER_VALUE; N_REGISTERS_IN_MAIN_MEMORY],
-            variable: Variable {
-                declaration: HashMap::new(),
-                reference: HashMap::new(),
-            },
             flag: Flag::new(),
         }
     }
@@ -88,7 +74,7 @@ impl Processor {
             println!("{:24}{:?}", "Opcode:", opcode);
             // Execute the handler based on instruction form.
             match form {
-                Form::Six => self.form_six_handler(opcode),
+                Form::Six => self.form_six_handler(opcode, decoder),
                 _ => (),
             }
         }
@@ -250,38 +236,35 @@ impl Processor {
             _ => (),
         }
     }
-    fn exe_bcc(&mut self, cond: bool) {
+    fn exe_bcc(&mut self, cond: bool, mut decoder: EncoderDecoder) {
         if cond {
-            if let Some(label) = self.variable.reference.get(&self.get_pc()) {
-                if let Some(payload) = self.variable.declaration.get(label) {
-                    // Subtract one because the main loop will increment program counter.
-                    self.set_pc(*payload - 1)
-                }
-            }
+            self.set_pc(decoder.get_immed20() - 1)
         }
     }
 
-    fn form_six_handler(&mut self, opcode: Opcode) {
+    fn form_six_handler(&mut self, opcode: Opcode, decoder: EncoderDecoder) {
         match opcode {
-            Opcode::BEQ => self.exe_bcc(self.flag.get_z()),
-            Opcode::BNE => self.exe_bcc(!self.flag.get_z()),
-            Opcode::BHS => self.exe_bcc(self.flag.get_c()),
-            Opcode::BLO => self.exe_bcc(!self.flag.get_c()),
-            Opcode::BMI => self.exe_bcc(self.flag.get_n()),
-            Opcode::BPL => self.exe_bcc(!self.flag.get_n()),
-            Opcode::BVS => self.exe_bcc(self.flag.get_v()),
-            Opcode::BVC => self.exe_bcc(!self.flag.get_v()),
-            Opcode::BHI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z()),
-            Opcode::BLS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z()),
-            Opcode::BGE => self.exe_bcc(self.flag.get_n() == self.flag.get_v()),
-            Opcode::BLT => self.exe_bcc(self.flag.get_n() != self.flag.get_v()),
-            Opcode::BGT => {
-                self.exe_bcc(!self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()))
-            }
-            Opcode::BLE => {
-                self.exe_bcc(self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()))
-            }
-            Opcode::B => self.exe_bcc(true),
+            Opcode::BEQ => self.exe_bcc(self.flag.get_z(), decoder),
+            Opcode::BNE => self.exe_bcc(!self.flag.get_z(), decoder),
+            Opcode::BHS => self.exe_bcc(self.flag.get_c(), decoder),
+            Opcode::BLO => self.exe_bcc(!self.flag.get_c(), decoder),
+            Opcode::BMI => self.exe_bcc(self.flag.get_n(), decoder),
+            Opcode::BPL => self.exe_bcc(!self.flag.get_n(), decoder),
+            Opcode::BVS => self.exe_bcc(self.flag.get_v(), decoder),
+            Opcode::BVC => self.exe_bcc(!self.flag.get_v(), decoder),
+            Opcode::BHI => self.exe_bcc(self.flag.get_c() && !self.flag.get_z(), decoder),
+            Opcode::BLS => self.exe_bcc(!self.flag.get_c() || self.flag.get_z(), decoder),
+            Opcode::BGE => self.exe_bcc(self.flag.get_n() == self.flag.get_v(), decoder),
+            Opcode::BLT => self.exe_bcc(self.flag.get_n() != self.flag.get_v(), decoder),
+            Opcode::BGT => self.exe_bcc(
+                !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
+                decoder,
+            ),
+            Opcode::BLE => self.exe_bcc(
+                self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
+                decoder,
+            ),
+            Opcode::B => self.exe_bcc(true, decoder),
             _ => (),
         }
     }
@@ -291,41 +274,12 @@ impl Processor {
         println!("{:23}[{}] = {:#010X}", "Result:", get_name(dr_addr), result);
         self.registers[dr_addr] = result;
     }
-    fn register_variable_reference(&mut self, label: Label, pc_ptr: Option<Address>) {
-        if let Some(pc_ptr) = pc_ptr {
-            self.variable.reference.insert(pc_ptr, label);
-        } else {
-            self.variable.reference.insert(self.get_pc(), label);
-        }
-    }
-    fn register_variable_declaration(&mut self, label: Label, pc_ptr: Option<u32>) {
-        if let Some(pc_ptr) = pc_ptr {
-            self.variable.declaration.insert(label, pc_ptr);
-        } else {
-            self.variable
-                .declaration
-                .insert(label, self.get_pc() as u32);
-        }
-    }
     /// Load program into main memory.
-    pub fn load_program(&mut self, program: &Vec<(Option<u32>, Option<Label>, Option<Form>)>) {
-        let mut pc_ptr = 0;
-        for (payload, label, form) in program {
-            if let Some(label) = label {
-                match form {
-                    Some(Form::Six) => {
-                        self.register_variable_reference(label.clone(), Some(pc_ptr))
-                    }
-                    _ => self.register_variable_declaration(label.clone(), Some(pc_ptr as u32)),
-                }
-            }
-            match payload {
-                Some(payload) => {
-                    self.write_to_mm(pc_ptr, *payload);
-                    pc_ptr += 1;
-                }
-                _ => (),
-            }
+    pub fn load_program(&mut self, program: &Vec<Instruction>) {
+        let mut instr_ptr = 0;
+        for instr in program {
+            self.write_to_mm(instr_ptr, *instr);
+            instr_ptr += 1;
         }
     }
     /// Run program loaded into main memory.
@@ -334,32 +288,6 @@ impl Processor {
             // Fetch and decode a new instruction.
             self.fetch_and_decode(); // This function will invoke the execute function.
             self.incr_pc(); // Increment the program counter.
-        }
-    }
-    /// Execute machine in REPL mode.
-    pub fn repl(&mut self) {
-        loop {
-            self.run(); // If there exist an instruction already in main memory then fetch and execute.
-                        // Else read-eval the next instruction from standard input.
-            if let Ok((instruction, label, form)) = repl() {
-                if let Some(label) = label {
-                    match form {
-                        Some(Form::Six) => self.register_variable_reference(label, None),
-                        _ => self.register_variable_declaration(label, None),
-                    }
-                }
-                match instruction {
-                    Some(instruction) => {
-                        // Write instruction from standard input to the main memory pointed to by the
-                        // program counter.
-                        self.write_to_mm(self.get_pc(), instruction);
-                        // Fetch and decode a new instruction.
-                        self.fetch_and_decode(); // This function will invoke the execute function.
-                        self.incr_pc(); // Increment the program counter.
-                    }
-                    _ => (),
-                }
-            }
         }
     }
 }

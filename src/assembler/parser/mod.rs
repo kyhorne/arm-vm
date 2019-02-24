@@ -8,7 +8,7 @@ mod ready_state;
 mod register_state;
 
 use super::super::util::Form;
-use super::lexer::{Label, Token};
+use super::lexer::Token;
 
 /// The syntax is analyzed using a finite state machine.
 struct CloseBraceState;
@@ -25,15 +25,14 @@ pub struct StateMachine<S> {
     pub state: S,
     // The parse tree.
     pub tokens: Vec<Token>,
-    // Possible forms this expression may satisfy.
+    // Forms this expression may satisfy.
     pub forms: Vec<Form>,
-    pub label: Option<Label>,
 }
 
 /// Run the state machine.
-pub fn run(tokens: &mut Vec<Token>) -> Result<(Option<Form>, Option<Label>), ()> {
+pub fn run(tokens: &mut Vec<Token>) -> Result<Option<Form>, ()> {
     tokens.reverse();
-    return ready_state::StateMachine::new(tokens.to_vec()).handler();
+    ready_state::StateMachine::new(tokens.to_vec()).handler()
 }
 
 #[cfg(test)]
@@ -320,8 +319,8 @@ mod tests_ldr_str_form_two {
 #[cfg(test)]
 mod tests_basic_form_four {
 
-    use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Literal::*, Separator::*, Token::*};
+    use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
+    use super::super::lexer::{Label::*, Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -433,8 +432,8 @@ mod tests_basic_form_four {
 #[cfg(test)]
 mod tests_ldr_str_form_four {
 
-    use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Literal::*, Separator::*, Token::*};
+    use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
+    use super::super::lexer::{Label::*, Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -515,8 +514,8 @@ mod tests_ldr_str_form_four {
 #[cfg(test)]
 mod tests_basic_form_five {
 
-    use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Literal::*, Separator::*, Token::*};
+    use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
+    use super::super::lexer::{Label::*, Separator::*, Token::*};
     use super::*;
 
     #[test]
@@ -614,8 +613,8 @@ mod tests_basic_form_five {
 #[cfg(test)]
 mod tests_ldr_str_form_five {
 
-    use super::super::super::util::{Form::*, Opcode::*, Register::*};
-    use super::super::lexer::{Label::*, Literal::*, Separator::*, Token::*};
+    use super::super::super::util::{Form::*, Literal::*, Opcode::*, Register::*};
+    use super::super::lexer::{Label::*, Separator::*, Token::*};
     use super::*;
 
     #[test]

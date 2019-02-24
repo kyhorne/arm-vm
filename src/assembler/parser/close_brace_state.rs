@@ -1,21 +1,20 @@
 use super::super::super::util::Form;
-use super::super::lexer::Label;
 use super::super::parser::{CloseBraceState, StateMachine};
 
 impl StateMachine<CloseBraceState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
+    pub fn handler(mut self) -> Result<Option<Form>, ()> {
         if let None = self.tokens.pop() {
             if self.forms.contains(&Form::One) {
-                return Ok((Some(Form::One), self.label));
+                return Ok(Some(Form::One));
             }
             if self.forms.contains(&Form::Two) {
-                return Ok((Some(Form::Two), self.label));
+                return Ok(Some(Form::Two));
             }
             if self.forms.contains(&Form::Four) {
-                return Ok((Some(Form::Four), self.label));
+                return Ok(Some(Form::Four));
             }
             if self.forms.contains(&Form::Five) {
-                return Ok((Some(Form::Five), self.label));
+                return Ok(Some(Form::Five));
             }
         }
         return Err(());

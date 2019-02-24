@@ -1,5 +1,5 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Label, Separator, Token};
+use super::super::lexer::{Separator, Token};
 use super::super::parser::{CloseBraceState, CommaState, RegisterState, StateMachine};
 
 impl From<StateMachine<RegisterState>> for StateMachine<CloseBraceState> {
@@ -8,7 +8,6 @@ impl From<StateMachine<RegisterState>> for StateMachine<CloseBraceState> {
             state: CloseBraceState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
@@ -19,13 +18,12 @@ impl From<StateMachine<RegisterState>> for StateMachine<CommaState> {
             state: CommaState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
 
 impl StateMachine<RegisterState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
+    pub fn handler(mut self) -> Result<Option<Form>, ()> {
         let token = self.tokens.pop();
         match token {
             Some(Token::Separator(separator)) => match separator {
@@ -37,10 +35,10 @@ impl StateMachine<RegisterState> {
             },
             None => {
                 if self.forms.contains(&Form::One) {
-                    return Ok((Some(Form::One), self.label));
+                    return Ok(Some(Form::One));
                 }
                 if self.forms.contains(&Form::Two) {
-                    return Ok((Some(Form::Two), self.label));
+                    return Ok(Some(Form::Two));
                 }
             }
             _ => (),

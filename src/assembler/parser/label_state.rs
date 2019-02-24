@@ -1,5 +1,5 @@
 use super::super::super::util::{reducer, Form};
-use super::super::lexer::{Label, Token};
+use super::super::lexer::Token;
 pub use super::super::parser::StateMachine;
 use super::super::parser::{LabelState, OpcodeState};
 
@@ -9,13 +9,12 @@ impl From<StateMachine<LabelState>> for StateMachine<OpcodeState> {
             state: OpcodeState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
 
 impl StateMachine<LabelState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
+    pub fn handler(mut self) -> Result<Option<Form>, ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
                 self.forms = reducer(opcode.get_forms(), &opcode, self.tokens.len() + 1);
@@ -24,7 +23,7 @@ impl StateMachine<LabelState> {
                 }
                 return StateMachine::<OpcodeState>::from(self).handler();
             }
-            None => return Ok((None, self.label)),
+            None => return Ok(None),
             _ => return Err(()),
         }
     }

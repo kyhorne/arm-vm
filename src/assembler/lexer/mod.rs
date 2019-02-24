@@ -4,7 +4,7 @@ use super::super::util::{Literal, Opcode, Register};
 use std::str::FromStr;
 pub use token::*;
 
-/// Convert the soruce code into meaningful lexemes.
+/// Convert the source code into meaningful lexemes.
 pub fn lexer(mut buf: String) -> Vec<Token> {
     // Pad separators with whitespace.
     buf = buf.replace(",", " , ");
