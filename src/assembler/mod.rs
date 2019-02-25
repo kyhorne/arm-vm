@@ -171,6 +171,6 @@ impl Assembler {
                 _ => (),
             }
         }
-        encoder.get_instr()
+        return encoder.get_instr();
     }
 }

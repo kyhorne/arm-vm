@@ -16,7 +16,7 @@ impl Literal {
                 if let Err(_) = immed.parse::<u32>() {
                     is_valid = false
                 }
-                is_valid
+                return is_valid;
             }
         }
     }
@@ -27,9 +27,9 @@ impl Literal {
                 if immed.contains("0x") {
                     // Get the value encoded as in base 16.
                     let immed = immed.trim_start_matches("0x");
-                    u32::from_str_radix(&immed, 16).unwrap();
+                    return u32::from_str_radix(&immed, 16).unwrap();
                 }
-                immed.parse::<u32>().unwrap()
+                return immed.parse::<u32>().unwrap();
             }
         }
     }

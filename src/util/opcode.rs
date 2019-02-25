@@ -233,7 +233,7 @@ mod tests_form {
 
     #[test]
     fn test_form_six() {
-        assert_eq!(Six.get_expr_length(&B), 2);
+        assert_eq!(Six.get_expr_length(&B), 3);
     }
 
 }

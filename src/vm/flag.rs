@@ -73,7 +73,7 @@ mod tests {
     fn test_update() {
         let mut flag = Flag::new();
         flag.update(0x2C000000, 0xD2FFFFFF);
-        assert!(!flag.c && !flag.z && !flag.n && !flag.v);
+        assert!(!flag.get_c() && !flag.get_z() && !flag.get_n() && !flag.get_v());
     }
 
     #[test]
