@@ -9,21 +9,20 @@ impl Literal {
     pub fn is_valid(&mut self) -> bool {
         match self {
             Literal::Immediate(immed) => {
-                if immed.starts_with("#'") {
+                let mut is_valid = immed.starts_with("#");
+                immed.remove(0); // Remove prefix #.
+                if immed.starts_with("'") {
                     // Value encoded as an Ascii character.
-                    immed.remove(0); // Remove prefix #.
                     immed.remove(0); // Remove prefix '.
                     immed.pop(); // Remove suffix '.
                     return immed.contains(char::is_alphabetic) && immed.len() == 1;
                 }
-                let mut is_valid_literal = immed.starts_with("#");
-                immed.remove(0); // Remove prefix #.
                 let immed = immed.trim_start_matches("0x");
                 // Ensure value is parable to u32.
                 if let Err(_) = immed.parse::<u32>() {
-                    is_valid_literal = false
+                    is_valid = false
                 }
-                return is_valid_literal;
+                return is_valid;
             }
         }
     }
