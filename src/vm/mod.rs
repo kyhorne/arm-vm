@@ -443,16 +443,6 @@ mod tests_translator {
     }
 
     #[test]
-    fn test_form_two_cmp() {
-        let mut vm = Processor::new();
-        vm.registers[R1 as usize] = 0x2C000000;
-        vm.registers[R2 as usize] = 0xD2FFFFFF;
-        let decoder = EncoderDecoder::new(Some(0x47120000));
-        vm.form_two_handler(CMP, decoder);
-        assert!(!vm.flag.get_c() && !vm.flag.get_z() && !vm.flag.get_n() && !vm.flag.get_v());
-    }
-
-    #[test]
     fn test_form_four_add() {
         let mut vm = Processor::new();
         vm.registers[R2 as usize] = 0x2;
@@ -560,15 +550,6 @@ mod tests_translator {
         let decoder = EncoderDecoder::new(Some(0x37100001));
         vm.form_five_handler(STR, decoder);
         assert_eq!(vm.main_memory[0x3], 0x1234);
-    }
-
-    #[test]
-    fn test_form_five_cmp() {
-        let mut vm = Processor::new();
-        vm.registers[R1 as usize] = 0x1;
-        let decoder = EncoderDecoder::new(Some(0x57100000));
-        vm.form_five_handler(CMP, decoder);
-        assert!(vm.flag.get_c() && vm.flag.get_z() && !vm.flag.get_n() && !vm.flag.get_v());
     }
 
     #[test]
