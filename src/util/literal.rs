@@ -9,14 +9,21 @@ impl Literal {
     pub fn is_valid(&mut self) -> bool {
         match self {
             Literal::Immediate(immed) => {
-                let mut is_valid = immed.starts_with("#");
-                immed.remove(0); // Remove prefix.
+                if immed.starts_with("#'") {
+                    // Value encoded as an Ascii character.
+                    immed.remove(0); // Remove prefix #.
+                    immed.remove(0); // Remove prefix '.
+                    immed.pop(); // Remove suffix '.
+                    return immed.contains(char::is_alphabetic) && immed.len() == 1;
+                }
+                let mut is_valid_literal = immed.starts_with("#");
+                immed.remove(0); // Remove prefix #.
                 let immed = immed.trim_start_matches("0x");
                 // Ensure value is parable to u32.
                 if let Err(_) = immed.parse::<u32>() {
-                    is_valid = false
+                    is_valid_literal = false
                 }
-                return is_valid;
+                return is_valid_literal;
             }
         }
     }
@@ -25,9 +32,13 @@ impl Literal {
         match self {
             Literal::Immediate(immed) => {
                 if immed.contains("0x") {
-                    // Get the value encoded as in base 16.
+                    // Get the value encoded as base 16.
                     let immed = immed.trim_start_matches("0x");
                     return u32::from_str_radix(&immed, 16).unwrap();
+                }
+                if immed.contains(char::is_alphabetic) {
+                    //  Get the value encoded as an Ascii character.
+                    return (immed.chars().next().unwrap() as char) as u32;
                 }
                 return immed.parse::<u32>().unwrap();
             }
@@ -39,6 +50,11 @@ impl Literal {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_is_valid_with_base_ascii() {
+        assert!(Literal::Immediate(String::from("#'D'")).is_valid())
+    }
 
     #[test]
     fn test_is_valid_with_base_10() {
@@ -53,6 +69,11 @@ mod tests {
     #[test]
     fn test_is_valid_out_of_bounds() {
         assert!(!Literal::Immediate(String::from("#0x1FFFFFFFF")).is_valid())
+    }
+
+    #[test]
+    fn test_get_value_with_base_ascii() {
+        assert_eq!(Literal::Immediate(String::from("d")).get_value(), 100)
     }
 
     #[test]
