@@ -1,5 +1,5 @@
 use super::super::super::util::{reducer, Form, Opcode};
-use super::super::lexer::{Label, Separator, Token};
+use super::super::lexer::{Separator, Token};
 pub use super::super::parser::StateMachine;
 use super::super::parser::{LabelState, OpcodeState, ReadyState};
 
@@ -9,7 +9,6 @@ impl From<StateMachine<ReadyState>> for StateMachine<OpcodeState> {
             state: OpcodeState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
@@ -20,7 +19,6 @@ impl From<StateMachine<ReadyState>> for StateMachine<LabelState> {
             state: LabelState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
@@ -31,10 +29,9 @@ impl StateMachine<ReadyState> {
             state: ReadyState,
             tokens: tokens,
             forms: Vec::new(),
-            label: None,
         }
     }
-    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
+    pub fn handler(mut self) -> Result<Option<Form>, ()> {
         match self.tokens.pop() {
             Some(Token::Opcode(opcode)) => {
                 self.forms = reducer(opcode.get_forms(), &opcode, self.tokens.len() + 1);
@@ -44,20 +41,15 @@ impl StateMachine<ReadyState> {
                 }
                 // If LDR or STR instruction, ensure that expression ends with a close bracket.
                 match opcode {
-                    Opcode::STR | Opcode::LDR => {
-                        if self.forms.contains(&Form::Two) {
-                            match self.tokens.get(0) {
-                                Some(Token::Separator(Separator::CloseBrace)) => (),
-                                _ => return Err(()),
-                            }
-                        }
-                    }
+                    Opcode::STR | Opcode::LDR => match self.tokens.get(0) {
+                        Some(Token::Separator(Separator::CloseBrace)) => (),
+                        _ => return Err(()),
+                    },
                     _ => (),
                 }
                 return StateMachine::<OpcodeState>::from(self).handler();
             }
-            Some(Token::Label(label)) => {
-                self.label = Some(label);
+            Some(Token::Label(_)) => {
                 return StateMachine::<LabelState>::from(self).handler();
             }
             _ => return Err(()),

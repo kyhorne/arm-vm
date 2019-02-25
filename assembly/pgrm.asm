@@ -28,12 +28,12 @@
 
             mvn r6, #0       ; r6 = -1
             mov r7, #0       ; Initialize loop r7 = 0.
-            b   TestForDone  ; Test for done at end of loop!
+            bal TestForDone  ; Test for done at end of loop!
 DoFor       ldr r8, [r4, r7] ; Get element array[r7]
             cmp r8, r3       ; Element == value of interest.
             bne IncR7        ; No  - Continue loop.
             mov r6, r7       ; Yes - Save index.
-            b   DoneFor      ;     - Break.
+            bal DoneFor      ;     - Break.
 IncR7       add r7, r7, #1   ; r7++
 TestForDone cmp r7, r5       ; r7 < r5
             blt DoFor        ; Yes - Do loop body again.

@@ -1,13 +1,14 @@
 mod token;
 
+use super::super::util::{ConditionCode, Literal, Opcode, Register};
 use std::str::FromStr;
-
-use super::super::util::{Opcode, Register};
 pub use token::*;
 
-/// Convert the soruce code into meaningful lexemes.
+/// Convert the source code into meaningful lexemes.
 pub fn lexer(mut buf: String) -> Vec<Token> {
     // Pad separators with whitespace.
+    buf = buf.replace("b", " b ");
+    buf = buf.replace("B", " B ");
     buf = buf.replace(",", " , ");
     buf = buf.replace("[", " [ ");
     buf = buf.replace("]", " ] ");
@@ -18,6 +19,10 @@ pub fn lexer(mut buf: String) -> Vec<Token> {
     for token in buf.split_whitespace() {
         if let Ok(opcode) = Opcode::from_str(&token) {
             tokens.push(Token::Opcode(opcode));
+            continue;
+        }
+        if let Ok(cond_code) = ConditionCode::from_str(&token) {
+            tokens.push(Token::ConditionCode(cond_code));
             continue;
         }
         if let Ok(register) = Register::from_str(&token) {

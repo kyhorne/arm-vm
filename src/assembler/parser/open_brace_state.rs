@@ -1,5 +1,5 @@
 use super::super::super::util::Form;
-use super::super::lexer::{Label, Token};
+use super::super::lexer::Token;
 use super::super::parser::{ImmediateState, OpenBraceState, RegisterState, StateMachine};
 
 impl From<StateMachine<OpenBraceState>> for StateMachine<RegisterState> {
@@ -8,7 +8,6 @@ impl From<StateMachine<OpenBraceState>> for StateMachine<RegisterState> {
             state: RegisterState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
@@ -19,13 +18,12 @@ impl From<StateMachine<OpenBraceState>> for StateMachine<ImmediateState> {
             state: ImmediateState,
             tokens: machine.tokens,
             forms: machine.forms,
-            label: machine.label,
         }
     }
 }
 
 impl StateMachine<OpenBraceState> {
-    pub fn handler(mut self) -> Result<(Option<Form>, Option<Label>), ()> {
+    pub fn handler(mut self) -> Result<Option<Form>, ()> {
         match self.tokens.pop() {
             Some(Token::Literal(_)) => StateMachine::<ImmediateState>::from(self).handler(),
             Some(Token::Register(_)) => StateMachine::<RegisterState>::from(self).handler(),

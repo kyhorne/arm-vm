@@ -35,7 +35,7 @@ fn main() {
         vm::Processor::new().repl();
     }
     if matches.is_present("read") {
-        let program = assembler::read_file();
+        let program = assembler::Assembler::new().read_file();
         let mut vm = vm::Processor::new();
         vm.load_program(&program);
         vm.run();
