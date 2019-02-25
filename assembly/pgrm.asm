@@ -23,7 +23,7 @@
 
             mov r5, #3       ; # Elements in array.
             mov r4, #1234    ; Start address
-            mov r3, #1       ; Value of interest.
+            mov r3, #'a'     ; Value of interest.
             str r3, [r4, #2] ; Store value of interest at array[2].
 
             mvn r6, #0       ; r6 = -1
