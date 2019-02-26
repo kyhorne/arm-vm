@@ -46,7 +46,7 @@ impl LabelRegistry {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Expression {
     tokens: Vec<Token>,
     form: Form,
@@ -96,6 +96,7 @@ impl Assembler {
         // Parse tokens returned from the lexer.
         if let Ok(form) = parser::run(&mut tokens) {
             self.optimized_tokens(&mut tokens, form);
+            self.registry.reset_instr_ptr();
             let expr = self.program.pop().unwrap();
             return Ok(self.get_bytecode(expr));
         } else {

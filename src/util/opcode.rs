@@ -29,7 +29,6 @@ pub enum Opcode {
     LDR,
     #[strum(serialize = "CMP", serialize = "cmp")]
     CMP,
-    #[strum(serialize = "B", serialize = "b")]
     B,
 }
 

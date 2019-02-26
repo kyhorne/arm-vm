@@ -21,10 +21,10 @@
 ;   }
 ; }
 
-            mov r5, #3       ; # Elements in array.
+            mov r5, #20      ; # Elements in array.
             mov r4, #0x1234  ; Start address
             mov r3, #'a'     ; Value of interest.
-            str r3, [r4, #2] ; Store value of interest at array[2].
+            str r3, [r4, #4] ; Store value of interest at array[2].
 
             mvn r6, #0       ; r6 = -1
             mov r7, #0       ; Initialize loop r7 = 0.

@@ -64,7 +64,10 @@ impl Processor {
         let mut decoder = EncoderDecoder::new(Some(*instr));
         // Extract the opcode and form from the payload.
         if let Ok((form, opcode)) = decoder.get_form_and_opcode() {
-            println!("{:24}{:?}", "Opcode:", opcode);
+            match opcode {
+                Opcode::B => println!("{:26}{:?}", "Opcode:", opcode),
+                _ => println!("{:24}{:?}", "Opcode:", opcode),
+            }
             // Execute the handler based on instruction form.
             match form {
                 Form::One => self.form_one_handler(opcode, decoder),
@@ -234,7 +237,8 @@ impl Processor {
     }
     fn form_six_handler(&mut self, mut decoder: EncoderDecoder) {
         let cond;
-        match decoder.get_cc() {
+        let cc = decoder.get_cc();
+        match cc {
             AL => cond = true,
             EQ => cond = self.flag.get_z(),
             NE => cond = !self.flag.get_z(),
@@ -251,6 +255,7 @@ impl Processor {
             GT => cond = !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
             LE => cond = self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
         }
+        println!("{:25}{:?} = {}", "Cc:", cc, cond);
         if cond {
             self.set_pc(decoder.get_immed20() - 1)
         }
