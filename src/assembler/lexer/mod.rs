@@ -7,8 +7,6 @@ pub use token::*;
 /// Convert the source code into meaningful lexemes.
 pub fn lexer(mut buf: String) -> Vec<Token> {
     // Pad separators with whitespace.
-    buf = buf.replace("b", " b ");
-    buf = buf.replace("B", " B ");
     buf = buf.replace(",", " , ");
     buf = buf.replace("[", " [ ");
     buf = buf.replace("]", " ] ");
@@ -22,6 +20,7 @@ pub fn lexer(mut buf: String) -> Vec<Token> {
             continue;
         }
         if let Ok(cond_code) = ConditionCode::from_str(&token) {
+            tokens.push(Token::Opcode(Opcode::B));
             tokens.push(Token::ConditionCode(cond_code));
             continue;
         }

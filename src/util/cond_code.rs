@@ -3,35 +3,35 @@ use num_derive::FromPrimitive;
 
 #[derive(Clone, EnumString, Eq, Debug, PartialEq, FromPrimitive)]
 pub enum ConditionCode {
-    #[strum(serialize = "AL", serialize = "al")]
+    #[strum(serialize = "BAL", serialize = "bal", serialize = "B", serialize = "b")]
     AL = 0x0,
-    #[strum(serialize = "EQ", serialize = "eq")]
+    #[strum(serialize = "BEQ", serialize = "beq")]
     EQ,
-    #[strum(serialize = "NE", serialize = "ne")]
+    #[strum(serialize = "BNE", serialize = "bne")]
     NE,
-    #[strum(serialize = "HS", serialize = "hs")]
+    #[strum(serialize = "BHS", serialize = "bhs")]
     HS,
-    #[strum(serialize = "LO", serialize = "lo")]
+    #[strum(serialize = "BLO", serialize = "blo")]
     LO,
-    #[strum(serialize = "MI", serialize = "mi")]
+    #[strum(serialize = "BMI", serialize = "bmi")]
     MI,
-    #[strum(serialize = "PL", serialize = "pl")]
+    #[strum(serialize = "BPL", serialize = "bpl")]
     PL,
-    #[strum(serialize = "VS", serialize = "vs")]
+    #[strum(serialize = "BVS", serialize = "bvs")]
     VS,
-    #[strum(serialize = "VC", serialize = "vc")]
+    #[strum(serialize = "BVC", serialize = "bvc")]
     VC,
-    #[strum(serialize = "HI", serialize = "hi")]
+    #[strum(serialize = "BHI", serialize = "bhi")]
     HI,
-    #[strum(serialize = "LS", serialize = "ls")]
+    #[strum(serialize = "BLS", serialize = "bls")]
     LS,
-    #[strum(serialize = "GE", serialize = "ge")]
+    #[strum(serialize = "BGE", serialize = "bge")]
     GE,
-    #[strum(serialize = "LT", serialize = "lt")]
+    #[strum(serialize = "BLT", serialize = "blt")]
     LT,
-    #[strum(serialize = "GT", serialize = "gt")]
+    #[strum(serialize = "BGT", serialize = "bgt")]
     GT,
-    #[strum(serialize = "LE", serialize = "le")]
+    #[strum(serialize = "BLE", serialize = "ble")]
     LE,
 }
 
