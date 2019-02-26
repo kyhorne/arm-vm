@@ -1,6 +1,5 @@
 mod flag;
 
-use super::assembler;
 use super::util::{
     get_name, ConditionCode::*, EncoderDecoder, Form, Instruction, Opcode, Register,
 };
@@ -255,10 +254,10 @@ impl Processor {
             GT => cond = !self.flag.get_z() && (self.flag.get_n() == self.flag.get_v()),
             LE => cond = self.flag.get_z() || (self.flag.get_n() != self.flag.get_v()),
         }
-        println!("{:25}{:?} = {}", "Cc:", cc, cond);
         if cond {
-            self.set_pc(decoder.get_immed20() - 1)
+            self.set_pc(decoder.get_immed20() - 1);
         }
+        println!("{:25}{:?} = {}", "Cc:", cc, cond);
     }
     /// Execute instruction and save the result to the destination register.
     fn execute(&mut self, dr_addr: Address, lambda: Box<Fn() -> Payload>) {
@@ -280,22 +279,6 @@ impl Processor {
             // Fetch and decode a new instruction.
             self.fetch_and_decode(); // This function will invoke the execute function.
             self.incr_pc(); // Increment the program counter.
-        }
-    }
-    /// Execute machine in REPL mode.
-    pub fn repl(&mut self) {
-        let mut assembler = assembler::Assembler::new();
-        loop {
-            self.run(); // If there exist an instruction already in main memory then fetch and execute.
-                        // Else read-eval the next instruction from standard input.
-            if let Ok(instruction) = assembler.read_eval() {
-                // Write instruction from standard input to the main memory pointed to by the
-                // program counter.
-                self.write_to_mm(self.get_pc(), instruction);
-                // Fetch and decode a new instruction.
-                self.fetch_and_decode(); // This function will invoke the execute function.
-                self.incr_pc(); // Increment the program counter.
-            }
         }
     }
 }
