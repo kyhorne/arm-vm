@@ -2,7 +2,7 @@
 
 This project is a virtualization of a 32-bit processor inspired by the ARM microarchitecture. It can handle 2^8 different operations and can address 2^32 memory locations. Each memory location can store a 32-bit word.
 
-The supported opcodes are located in: `~/src/util/opcode.rs`.
+The supported opcodes are located in: `~/src/util/opcode.rs`. 
 
 ## Usage
 
@@ -13,3 +13,5 @@ git clone https://github.com/kyhorne/arm-vm.git
 cd arm-vm
 cargo run -- -h
 ```
+
+There is an example program in `~/assembly/pgrm.asm`.
