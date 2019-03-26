@@ -14,4 +14,3 @@ cd arm-vm
 cargo run -- -h
 ```
 
-There is an example program in `~/assembly/pgrm.asm`.
