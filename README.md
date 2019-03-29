@@ -1,8 +1,8 @@
 # arm-vm
 
-This project is a virtualization of a 32-bit processor inspired by the ARM microarchitecture. It can handle 2^8 different operations and can address 2^32 memory locations. Each memory location can store a 32-bit word.
+This project is a virtualization of a 32-bit processor inspired by the ARM microarchitecture. It is integrated with an assembler that can parse native ARM assembly opcodes into its mapped bytecode. Additionally, it is capable of logging the complete execution cycle; thereby, allowing students to visually understand the inner workings of an ARM processor. 
 
-The supported opcodes are located in: `~/src/util/opcode.rs`. 
+Can support 2^8 different operations and can address 2^32 memory locations. Each memory location can store a 32-bit word.
 
 ## Usage
 
